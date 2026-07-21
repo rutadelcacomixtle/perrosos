@@ -36,25 +36,36 @@ export function MapPicker({
     setSearchValue(place);
   }, [place]);
 
-  const reverseGeocode = useCallback(
-    async (lat: number, lng: number, updatePlace: boolean = true) => {
-      onPlaceChange(updatePlace ? place : place, lat, lng);
-      if (!updatePlace) return;
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=17`
-        );
-        const data = await res.json();
-        if (data?.display_name) {
-          onPlaceChange(data.display_name, lat, lng);
-          setSearchValue(data.display_name);
-        }
-      } catch {
-        // sin conexion; se conservan las coordenadas
+  // Use refs for callbacks so map useEffects don't re-run on every change
+  const onPlaceChangeRef = useRef(onPlaceChange);
+  onPlaceChangeRef.current = onPlaceChange;
+  const placeRef = useRef(place);
+  placeRef.current = place;
+
+  const reverseGeocodeCompact = useCallback(async (lat: number, lng: number) => {
+    onPlaceChangeRef.current(placeRef.current, lat, lng);
+  }, []);
+
+  const reverseGeocodeFullScreen = useCallback(async (lat: number, lng: number) => {
+    onPlaceChangeRef.current(placeRef.current, lat, lng);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=17`
+      );
+      const data = await res.json();
+      if (data?.display_name) {
+        onPlaceChangeRef.current(data.display_name, lat, lng);
+        setSearchValue(data.display_name);
       }
-    },
-    [onPlaceChange, place]
-  );
+    } catch {
+      // sin conexion
+    }
+  }, []);
+
+  const reverseGeocodeCompactRef = useRef(reverseGeocodeCompact);
+  reverseGeocodeCompactRef.current = reverseGeocodeCompact;
+  const reverseGeocodeFullScreenRef = useRef(reverseGeocodeFullScreen);
+  reverseGeocodeFullScreenRef.current = reverseGeocodeFullScreen;
 
   const pinIcon = useCallback(async () => {
     const L = await import("leaflet");
@@ -68,7 +79,7 @@ export function MapPicker({
     });
   }, []);
 
-  // Compact map
+  // Compact map — only depends on ref to the DOM element
   useEffect(() => {
     if (!compactMapRef.current || isFullScreen) return;
     let cancelled = false;
@@ -105,7 +116,7 @@ export function MapPicker({
       map.on("moveend", () => {
         const center = map.getCenter();
         marker.setLatLng(center);
-        reverseGeocode(center.lat, center.lng, false);
+        reverseGeocodeCompactRef.current(center.lat, center.lng);
       });
 
       compactMapInstanceRef.current = map;
@@ -120,7 +131,8 @@ export function MapPicker({
       compactMapInstanceRef.current = null;
       compactMarkerRef.current = null;
     };
-  }, [placeLat, placeLng, reverseGeocode, pinIcon, isFullScreen]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFullScreen]);
 
   // Full screen map
   useEffect(() => {
@@ -158,12 +170,12 @@ export function MapPicker({
 
       map.on("moveend", () => {
         const center = map.getCenter();
-        reverseGeocode(center.lat, center.lng, true);
+        reverseGeocodeFullScreenRef.current(center.lat, center.lng);
       });
 
       fullMapInstanceRef.current = map;
 
-      setTimeout(() => map.invalidateSize(), 150);
+      setTimeout(() => map.invalidateSize(), 200);
     });
 
     return () => {
@@ -171,11 +183,12 @@ export function MapPicker({
       fullMapInstanceRef.current?.remove();
       fullMapInstanceRef.current = null;
     };
-  }, [isFullScreen, placeLat, placeLng, reverseGeocode, pinIcon]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFullScreen]);
 
   function handleSearchInput(value: string) {
     setSearchValue(value);
-    onPlaceChange(value, null, null);
+    onPlaceChangeRef.current(value, null, null);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     if (value.trim().length < 3) {
       setSuggestions([]);
@@ -204,7 +217,7 @@ export function MapPicker({
   }) {
     const lat = parseFloat(s.lat);
     const lng = parseFloat(s.lon);
-    onPlaceChange(s.display_name, lat, lng);
+    onPlaceChangeRef.current(s.display_name, lat, lng);
     setSearchValue(s.display_name);
     setSuggestions([]);
     compactMapInstanceRef.current?.setView([lat, lng], 15);
