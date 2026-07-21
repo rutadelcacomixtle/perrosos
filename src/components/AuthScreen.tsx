@@ -18,27 +18,31 @@ export function AuthScreen() {
     setError(null);
     setSuccess(null);
 
-    if (mode === "register") {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: displayName },
-        },
-      });
-      if (signUpError) {
-        setError(signUpError.message);
+    try {
+      if (mode === "register") {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: displayName },
+          },
+        });
+        if (signUpError) {
+          setError(signUpError.message || "Error al crear la cuenta. Intenta de nuevo.");
+        } else {
+          setSuccess("Revisa tu email para confirmar tu cuenta.");
+        }
       } else {
-        setSuccess("Revisa tu email para confirmar tu cuenta.");
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) {
+          setError(signInError.message || "Error al iniciar sesión. Intenta de nuevo.");
+        }
       }
-    } else {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (signInError) {
-        setError(signInError.message);
-      }
+    } catch {
+      setError("Error de conexión. Verifica tu internet e intenta de nuevo.");
     }
 
     setLoading(false);
