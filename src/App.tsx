@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { Trash2, Clock, MapPin, Users, TrendingUp, Gauge } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
+import { AuthScreen } from "./components/AuthScreen";
 import { Header, ElevationDivider } from "./components/Header";
 import { Calendar } from "./components/Calendar";
 import { Sticker, TipoBadge } from "./components/EventCard";
@@ -14,16 +15,6 @@ export default function App() {
   const [modalDate, setModalDate] = useState<string | null>(null);
 
   useEffect(() => {
-    async function handleCallback() {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
-      if (code) {
-        await supabase.auth.exchangeCodeForSession(code);
-        window.history.replaceState({}, "", "/");
-      }
-    }
-    handleCallback();
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
@@ -36,6 +27,10 @@ export default function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  if (!user) {
+    return <AuthScreen />;
+  }
 
   useEffect(() => {
     async function fetchEvents() {
@@ -125,7 +120,7 @@ export default function App() {
       className="w-full flex justify-center"
     >
       <div className="w-full max-w-md px-4 pt-6 pb-16 font-[family-name:var(--font-body)]">
-        <Header user={user} />
+        <Header />
         <ElevationDivider />
 
         <Calendar events={events} onDayClick={setModalDate} />

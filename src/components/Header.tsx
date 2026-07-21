@@ -1,8 +1,7 @@
-import { Share2 } from "lucide-react";
-import { AuthButton } from "./AuthButton";
-import type { User } from "@supabase/supabase-js";
+import { Share2, LogOut } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
-export function Header({ user }: { user: User | null }) {
+export function Header() {
   return (
     <div className="flex items-center justify-between mb-1">
       <div>
@@ -20,7 +19,14 @@ export function Header({ user }: { user: User | null }) {
         </p>
       </div>
       <div className="flex items-center gap-2">
-        <AuthButton user={user} />
+        <button
+          onClick={() => supabase.auth.signOut()}
+          className="p-2 rounded-full cursor-pointer"
+          style={{ background: "#1D1F23", border: "1px solid #34383D" }}
+          aria-label="Cerrar sesion"
+        >
+          <LogOut size={18} color="#9BA3AC" />
+        </button>
         <button
           style={{ background: "#1D1F23", border: "1px solid #34383D" }}
           className="p-2 rounded-full cursor-pointer"
