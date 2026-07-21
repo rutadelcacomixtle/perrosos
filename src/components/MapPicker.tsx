@@ -2,8 +2,42 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Search, Navigation, MapPin } from "lucide-react";
 import type L from "leaflet";
 
-const DEFAULT_LAT = 19.0413;
-const DEFAULT_LNG = -98.2062;
+const DEFAULT_LAT = 18.884052;
+const DEFAULT_LNG = -97.7283491;
+
+function parseDMS(input: string): { lat: number; lng: number } | null {
+  const cleaned = input.trim();
+  const dmsRegex =
+    /(-?\d{1,3})[°]\s*(\d{1,2})[′']\s*([\d.]+)["″]\s*([NSEW])\s*[,\s]*(-?\d{1,3})[°]\s*(\d{1,2})[′']\s*([\d.]+)["″]\s*([NSEW])/i;
+  const match = cleaned.match(dmsRegex);
+  if (!match) return null;
+
+  const [, latD, latM, latS, latH, lngD, lngM, lngS, lngH] = match;
+  if (!latD || !latM || !latS || !latH || !lngD || !lngM || !lngS || !lngH) return null;
+
+  let lat = parseFloat(latD) + parseFloat(latM) / 60 + parseFloat(latS) / 3600;
+  let lng = parseFloat(lngD) + parseFloat(lngM) / 60 + parseFloat(lngS) / 3600;
+  if (latH.toUpperCase() === "S") lat = -lat;
+  if (lngH.toUpperCase() === "W") lng = -lng;
+  return { lat, lng };
+}
+
+function parseCoords(input: string): { lat: number; lng: number } | null {
+  const dms = parseDMS(input);
+  if (dms) return dms;
+
+  const cleaned = input.trim();
+  const decimalRegex = /^(-?\d{1,3}\.?\d*)\s*[,]\s*(-?\d{1,3}\.?\d*)$/;
+  const dm = cleaned.match(decimalRegex);
+  if (dm && dm[1] && dm[2]) {
+    const lat = parseFloat(dm[1]);
+    const lng = parseFloat(dm[2]);
+    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+      return { lat, lng };
+    }
+  }
+  return null;
+}
 
 interface MapPickerProps {
   place: string;
@@ -23,6 +57,7 @@ export function MapPicker({
   const compactMapInstanceRef = useRef<L.Map | null>(null);
   const fullMapInstanceRef = useRef<L.Map | null>(null);
   const compactMarkerRef = useRef<L.Marker | null>(null);
+  const fullMarkerRef = useRef<L.Marker | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   const [suggestions, setSuggestions] = useState<
@@ -36,7 +71,6 @@ export function MapPicker({
     setSearchValue(place);
   }, [place]);
 
-  // Use refs for callbacks so map useEffects don't re-run on every change
   const onPlaceChangeRef = useRef(onPlaceChange);
   onPlaceChangeRef.current = onPlaceChange;
   const placeRef = useRef(place);
@@ -71,7 +105,7 @@ export function MapPicker({
     const L = await import("leaflet");
     return L.divIcon({
       className: "",
-      html: `<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center">
+      html: `<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;pointer-events:none">
         <div style="width:22px;height:22px;border-radius:50% 50% 50% 0;background:#80C6FF;border:3px solid #0e0f11;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,0.6)"></div>
       </div>`,
       iconSize: [28, 28],
@@ -79,7 +113,12 @@ export function MapPicker({
     });
   }, []);
 
-  // Compact map — only depends on ref to the DOM element
+  function panMapTo(lat: number, lng: number) {
+    compactMapInstanceRef.current?.setView([lat, lng], 16);
+    fullMapInstanceRef.current?.setView([lat, lng], 17);
+  }
+
+  // Compact map
   useEffect(() => {
     if (!compactMapRef.current || isFullScreen) return;
     let cancelled = false;
@@ -97,7 +136,7 @@ export function MapPicker({
         doubleClickZoom: true,
         scrollWheelZoom: true,
         maxZoom: 19,
-      }).setView([lat, lng], placeLat ? 15 : 12);
+      }).setView([lat, lng], placeLat ? 16 : 13);
 
       L.tileLayer(
         "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
@@ -111,11 +150,15 @@ export function MapPicker({
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
       const icon = await pinIcon();
-      const marker = L.marker([lat, lng], { draggable: false, icon }).addTo(map);
+      const marker = L.marker([lat, lng], { draggable: false, icon, zIndexOffset: 1000 }).addTo(map);
+
+      map.on("move", () => {
+        const center = map.getCenter();
+        marker.setLatLng(center);
+      });
 
       map.on("moveend", () => {
         const center = map.getCenter();
-        marker.setLatLng(center);
         reverseGeocodeCompactRef.current(center.lat, center.lng);
       });
 
@@ -152,7 +195,7 @@ export function MapPicker({
         doubleClickZoom: true,
         scrollWheelZoom: true,
         maxZoom: 19,
-      }).setView([lat, lng], placeLat ? 16 : 13);
+      }).setView([lat, lng], placeLat ? 17 : 14);
 
       L.tileLayer(
         "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
@@ -166,7 +209,12 @@ export function MapPicker({
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
       const icon = await pinIcon();
-      L.marker([lat, lng], { draggable: false, icon }).addTo(map);
+      const marker = L.marker([lat, lng], { draggable: false, icon, zIndexOffset: 1000 }).addTo(map);
+
+      map.on("move", () => {
+        const center = map.getCenter();
+        marker.setLatLng(center);
+      });
 
       map.on("moveend", () => {
         const center = map.getCenter();
@@ -174,6 +222,7 @@ export function MapPicker({
       });
 
       fullMapInstanceRef.current = map;
+      fullMarkerRef.current = marker;
 
       setTimeout(() => map.invalidateSize(), 200);
     });
@@ -182,12 +231,22 @@ export function MapPicker({
       cancelled = true;
       fullMapInstanceRef.current?.remove();
       fullMapInstanceRef.current = null;
+      fullMarkerRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFullScreen]);
 
   function handleSearchInput(value: string) {
     setSearchValue(value);
+
+    const coords = parseCoords(value);
+    if (coords) {
+      onPlaceChangeRef.current(value, coords.lat, coords.lng);
+      panMapTo(coords.lat, coords.lng);
+      setSuggestions([]);
+      return;
+    }
+
     onPlaceChangeRef.current(value, null, null);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     if (value.trim().length < 3) {
@@ -220,8 +279,7 @@ export function MapPicker({
     onPlaceChangeRef.current(s.display_name, lat, lng);
     setSearchValue(s.display_name);
     setSuggestions([]);
-    compactMapInstanceRef.current?.setView([lat, lng], 15);
-    fullMapInstanceRef.current?.setView([lat, lng], 16);
+    panMapTo(lat, lng);
   }
 
   function closeFullScreen() {
@@ -242,7 +300,7 @@ export function MapPicker({
           <input
             value={searchValue}
             onChange={(ev) => handleSearchInput(ev.target.value)}
-            placeholder="Buscar punto de reunion o direccion"
+            placeholder="Buscar, pegar coordenadas (19.04, -98.20)"
             style={{
               background: "#0e0f11",
               border: "1px solid #34383D",
@@ -318,7 +376,7 @@ export function MapPicker({
                 <input
                   value={searchValue}
                   onChange={(ev) => handleSearchInput(ev.target.value)}
-                  placeholder="Buscar direccion"
+                  placeholder="Buscar, pegar coordenadas"
                   style={{
                     background: "#0e0f11",
                     border: "1px solid #34383D",
