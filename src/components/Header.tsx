@@ -1,7 +1,9 @@
-import { Share2, LogOut } from "lucide-react";
-import { supabase } from "../lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
-export function Header() {
+export function Header({ user, onProfileClick }: { user: User; onProfileClick: () => void }) {
+  const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email || "";
+  const initial = name.charAt(0).toUpperCase();
+
   return (
     <div className="flex items-center justify-between mb-1">
       <div>
@@ -15,26 +17,20 @@ export function Header() {
           className="text-xs mt-1"
           style={{ color: "#9BA3AC" }}
         >
-          Calendario de eventos MTB · comparte el enlace en tu grupo
+          Calendario de eventos MTB
         </p>
       </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => supabase.auth.signOut()}
-          className="p-2 rounded-full cursor-pointer"
-          style={{ background: "#1D1F23", border: "1px solid #34383D" }}
-          aria-label="Cerrar sesion"
-        >
-          <LogOut size={18} color="#9BA3AC" />
-        </button>
-        <button
-          style={{ background: "#1D1F23", border: "1px solid #34383D" }}
-          className="p-2 rounded-full cursor-pointer"
-          aria-label="Compartir"
-        >
-          <Share2 size={18} color="#F5C842" />
-        </button>
-      </div>
+      <button
+        onClick={onProfileClick}
+        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold cursor-pointer shrink-0"
+        style={{
+          background: "linear-gradient(135deg, #F5C842, #d4a832)",
+          color: "#0e0f11",
+        }}
+        aria-label="Perfil"
+      >
+        {initial}
+      </button>
     </div>
   );
 }

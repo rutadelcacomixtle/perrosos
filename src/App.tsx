@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Trash2, Clock, MapPin, Users, TrendingUp, Gauge } from "lucide-react";
+import { Trash2, Clock, MapPin, Users, TrendingUp, Gauge, ChevronDown, ChevronUp } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
 import { AuthScreen } from "./components/AuthScreen";
@@ -7,12 +7,17 @@ import { Header, ElevationDivider } from "./components/Header";
 import { Calendar } from "./components/Calendar";
 import { Sticker, TipoBadge } from "./components/EventCard";
 import { EventModal } from "./components/EventModal";
+import { ProfileScreen } from "./components/ProfileScreen";
 import type { EventWithAttendees, Event } from "./types";
+
+const INITIAL_VISIBLE = 3;
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [events, setEvents] = useState<EventWithAttendees[]>([]);
   const [modalDate, setModalDate] = useState<string | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showAllUpcoming, setShowAllUpcoming] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -114,19 +119,23 @@ export default function App() {
     return <AuthScreen />;
   }
 
+  if (showProfile) {
+    return <ProfileScreen user={user} onBack={() => setShowProfile(false)} />;
+  }
+
+  const visibleUpcoming = showAllUpcoming ? upcoming : upcoming.slice(0, INITIAL_VISIBLE);
+
   return (
     <div
       style={{ background: "#0e0f11", color: "#EDEFF2", minHeight: "100vh" }}
       className="w-full flex justify-center"
     >
       <div className="w-full max-w-md px-4 pt-6 pb-16 font-[family-name:var(--font-body)]">
-        <Header />
+        <Header user={user} onProfileClick={() => setShowProfile(true)} />
         <ElevationDivider />
 
-        <Calendar events={events} onDayClick={setModalDate} />
-
-        {/* Upcoming list */}
-        <div className="mt-8">
+        {/* Proximas rodadas */}
+        <div className="mt-4 mb-8">
           <h2
             className="font-[family-name:var(--font-display)] uppercase text-lg mb-3"
             style={{ color: "#EDEFF2" }}
@@ -139,7 +148,7 @@ export default function App() {
             </p>
           )}
           <div className="flex flex-col gap-2">
-            {upcoming.map((e, i) => (
+            {visibleUpcoming.map((e, i) => (
               <div
                 key={e.id}
                 style={{ background: "#17181B", border: "1px solid #24272B" }}
@@ -221,7 +230,22 @@ export default function App() {
               </div>
             ))}
           </div>
+          {upcoming.length > INITIAL_VISIBLE && (
+            <button
+              onClick={() => setShowAllUpcoming(!showAllUpcoming)}
+              className="w-full flex items-center justify-center gap-1 mt-3 py-2 text-sm cursor-pointer"
+              style={{ color: "#80C6FF" }}
+            >
+              {showAllUpcoming ? (
+                <>Ver menos <ChevronUp size={16} /></>
+              ) : (
+                <>Ver todas ({upcoming.length}) <ChevronDown size={16} /></>
+              )}
+            </button>
+          )}
         </div>
+
+        <Calendar events={events} onDayClick={setModalDate} />
 
         <p
           className="text-xs mt-8 text-center"
