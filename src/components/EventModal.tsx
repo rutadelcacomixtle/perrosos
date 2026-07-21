@@ -56,6 +56,7 @@ export function EventModal({
 }: EventModalProps) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function updateForm<K extends keyof FormState>(
@@ -78,9 +79,28 @@ export function EventModal({
   async function saveEvent() {
     if (!form.title.trim()) return;
     setSaving(true);
+    setSaveError(null);
 
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id ?? null;
+
+    if (!userId) {
+      setSaveError("No se pudo identificar al usuario. Inicia sesion de nuevo.");
+      setSaving(false);
+      return;
+    }
+
+    // Ensure profile exists (for users who signed up before the trigger fix)
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .upsert(
+        { id: userId, display_name: userData.user?.user_metadata?.full_name || userData.user?.user_metadata?.name || null },
+        { onConflict: "id" }
+      );
+
+    if (profileError) {
+      console.error("Error upserting profile:", profileError.message);
+    }
 
     const newEvent = {
       date: dateKey,
@@ -106,6 +126,7 @@ export function EventModal({
 
     if (error || !inserted) {
       console.error("Error guardando evento:", error?.message);
+      setSaveError(error?.message || "Error al guardar el evento. Intenta de nuevo.");
       setSaving(false);
       return;
     }
@@ -375,6 +396,15 @@ export function EventModal({
             onChange={handleImage}
             className="hidden"
           />
+
+          {saveError && (
+            <p
+              className="text-xs px-3 py-2 rounded-lg"
+              style={{ background: "#2a1a1a", color: "#ff6b6b" }}
+            >
+              {saveError}
+            </p>
+          )}
 
           <button
             onClick={saveEvent}
