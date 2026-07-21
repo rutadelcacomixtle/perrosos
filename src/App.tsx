@@ -28,10 +28,6 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (!user) {
-    return <AuthScreen />;
-  }
-
   useEffect(() => {
     async function fetchEvents() {
       const { data: eventos } = await supabase
@@ -113,6 +109,10 @@ export default function App() {
   const dayEventsForModal = modalDate
     ? events.filter((e) => e.date === modalDate)
     : [];
+
+  if (!user) {
+    return <AuthScreen />;
+  }
 
   return (
     <div
