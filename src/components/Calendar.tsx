@@ -1,0 +1,116 @@
+import { useMemo } from "react";
+import type { EventWithAttendees } from "../types";
+import { Sticker } from "./EventCard";
+
+const MESES = [
+  "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre",
+];
+const DIAS = ["L", "M", "M", "J", "V", "S", "D"];
+
+function pad(n: number) {
+  return String(n).padStart(2, "0");
+}
+
+function toKey(y: number, m: number, d: number) {
+  return `${y}-${pad(m + 1)}-${pad(d)}`;
+}
+
+interface CalendarProps {
+  events: EventWithAttendees[];
+  onDayClick: (dateKey: string) => void;
+}
+
+export function Calendar({ events, onDayClick }: CalendarProps) {
+  const today = new Date();
+  const view = { y: today.getFullYear(), m: today.getMonth() };
+
+  const grid = useMemo(() => {
+    const firstDay = (new Date(view.y, view.m, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+    const cells: (number | null)[] = [];
+    for (let i = 0; i < firstDay; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+    return cells;
+  }, [view.y, view.m]);
+
+  const eventsByDay = useMemo(() => {
+    const map: Record<string, EventWithAttendees[]> = {};
+    for (const e of events) {
+      (map[e.date] ??= []).push(e);
+    }
+    return map;
+  }, [events]);
+
+  const isToday = (day: number) =>
+    day === today.getDate() &&
+    view.m === today.getMonth() &&
+    view.y === today.getFullYear();
+
+  return (
+    <>
+      <div className="flex items-center justify-between mt-3 mb-4">
+        <div />
+        <span className="font-[family-name:var(--font-display)] uppercase text-xl tracking-wide" style={{ color: "#EDEFF2" }}>
+          {MESES[view.m]} <span style={{ color: "#80C6FF" }}>{view.y}</span>
+        </span>
+        <div />
+      </div>
+
+      <div className="grid grid-cols-7 mb-1">
+        {DIAS.map((d, i) => (
+          <div
+            key={i}
+            className="text-center text-xs font-[family-name:var(--font-mono)]"
+            style={{ color: "#6B747C" }}
+          >
+            {d}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-7 gap-1">
+        {grid.map((day, idx) => {
+          if (day === null) return <div key={idx} />;
+          const key = toKey(view.y, view.m, day);
+          const dayEvents = eventsByDay[key] ?? [];
+
+          return (
+            <button
+              key={idx}
+              onClick={() => onDayClick(key)}
+              style={{
+                background: isToday(day) ? "#182530" : "#17181B",
+                border: isToday(day) ? "1px solid #80C6FF" : "1px solid #24272B",
+                minHeight: 52,
+              }}
+              className="relative rounded-md flex flex-col items-center justify-center pt-1 active:scale-95 transition-transform cursor-pointer"
+            >
+              <span
+                className="font-[family-name:var(--font-mono)] text-xs"
+                style={{
+                  color: isToday(day) ? "#EDEFF2" : "#9BA3AC",
+                }}
+              >
+                {pad(day)}
+              </span>
+              {dayEvents.length > 0 && (
+                <div className="absolute -top-1.5 -right-1.5">
+                  <Sticker event={dayEvents[0]!} index={idx} size="small" />
+                </div>
+              )}
+              {dayEvents.length > 1 && (
+                <span
+                  className="absolute bottom-0.5 right-1 font-[family-name:var(--font-mono)]"
+                  style={{ fontSize: 9, color: "#F5C842" }}
+                >
+                  +{dayEvents.length - 1}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+}

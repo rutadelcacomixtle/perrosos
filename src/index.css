@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0e0f11;
+  --color-surface: #17181b;
+  --color-surface-light: #1d1f23;
+  --color-border: #24272b;
+  --color-border-input: #34383d;
+  --color-accent-comunidad: #f5c842;
+  --color-accent-equipo: #80c6ff;
+  --color-text: #edeff2;
+  --color-text-secondary: #9ba3ac;
+  --color-text-muted: #6b747c;
+  --color-text-dim: #454b52;
+  --color-highlight-today: #182530;
+
+  --font-display: "Barlow Condensed", sans-serif;
+  --font-body: "Work Sans", sans-serif;
+  --font-mono: "Space Mono", monospace;
+}
+
+html {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+/* Leaflet overrides */
+.leaflet-control-zoom a {
+  background: var(--color-surface-light) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border-input) !important;
+}
+.leaflet-control-zoom a:hover {
+  background: var(--color-border) !important;
+}
+.leaflet-control-attribution {
+  background: rgba(14, 15, 17, 0.75) !important;
+  color: var(--color-text-muted) !important;
+}
+.leaflet-control-attribution a {
+  color: var(--color-text-secondary) !important;
+}
+.leaflet-bar {
+  border: none !important;
+}
