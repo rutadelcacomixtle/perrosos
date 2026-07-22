@@ -347,7 +347,7 @@ export function EventDetail({
                     inputMode="numeric"
                     value={elevation}
                     onChange={(ev) => setElevation(ev.target.value)}
-                    placeholder="Desnivel (m)"
+                    placeholder="Desnivel + (m)"
                     style={{
                       background: "#0e0f11",
                       border: "1px solid #34383D",

@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { Plus, X, Image as ImageIcon, Users } from "lucide-react";
 import { MapPicker } from "./MapPicker";
-import { AttendeeList } from "./AttendeeList";
 import { Sticker, TipoBadge } from "./EventCard";
 import { supabase } from "../lib/supabase";
 import { uploadEventImage } from "../lib/upload";
@@ -264,7 +263,8 @@ export function EventModal({
             className="rounded-md px-3 py-2 text-sm outline-none"
           />
 
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs" style={{ color: "#9BA3AC" }}>Hora de encuentro</span>
             <input
               type="time"
               value={form.time}
@@ -276,25 +276,7 @@ export function EventModal({
               }}
               className="rounded-md px-3 py-2 text-sm outline-none font-[family-name:var(--font-mono)] w-28"
             />
-            <span
-              className="flex items-center text-xs"
-              style={{ color: "#6B747C" }}
-            >
-              hora de encuentro
-            </span>
           </div>
-
-          <input
-            value={form.sourceUrl}
-            onChange={(ev) => updateForm("sourceUrl", ev.target.value)}
-            placeholder="Enlace al post original (FB, IG, TT...)"
-            style={{
-              background: "#0e0f11",
-              border: "1px solid #34383D",
-              color: "#EDEFF2",
-            }}
-            className="rounded-md px-3 py-2 text-sm outline-none"
-          />
 
           <MapPicker
             place={form.place}
@@ -306,6 +288,13 @@ export function EventModal({
               updateForm("placeLng", lng);
             }}
           />
+
+          {form.place && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs shrink-0" style={{ color: "#9BA3AC" }}>Punto de reunión</span>
+              <span className="text-xs truncate" style={{ color: "#EDEFF2" }}>{form.place}</span>
+            </div>
+          )}
 
           {form.type === "equipo" && (
             <div
@@ -338,7 +327,7 @@ export function EventModal({
                   onChange={(ev) =>
                     updateForm("elevation", ev.target.value)
                   }
-                  placeholder="Desnivel (m)"
+                  placeholder="Desnivel + (m)"
                   style={{
                     background: "#0e0f11",
                     border: "1px solid #34383D",
@@ -366,11 +355,6 @@ export function EventModal({
                   </button>
                 ))}
               </div>
-
-              <AttendeeList
-                attendees={form.attendees}
-                onChange={(a) => updateForm("attendees", a)}
-              />
             </div>
           )}
 
