@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { Eye, EyeOff, PawPrint, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, ArrowRight } from "lucide-react";
 
 export function AuthScreen() {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -61,12 +61,9 @@ export function AuthScreen() {
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
         }}
       >
-        {/* Icon */}
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-          style={{ background: "#F3443F" }}
-        >
-          <PawPrint size={32} color="#0e0f11" strokeWidth={2.5} />
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <img src="/perrosos-logo.svg" alt="PerroSOS MTB" className="h-16 w-16" />
         </div>
 
         {/* Title */}

@@ -6,19 +6,22 @@ export function Header({ user, onProfileClick }: { user: User; onProfileClick: (
 
   return (
     <div className="flex items-center justify-between mb-1">
-      <div>
-        <h1
-          className="text-4xl font-extrabold leading-none font-[family-name:var(--font-display)]"
-          style={{ color: "#EDEFF2" }}
-        >
-          PerroSOS MTB
-        </h1>
-        <p
-          className="text-xs mt-1"
-          style={{ color: "#9BA3AC" }}
-        >
-          Calendario de eventos MTB
-        </p>
+      <div className="flex items-center gap-3">
+        <img src="/perrosos-logo.svg" alt="PerroSOS MTB" className="h-10 w-10" />
+        <div>
+          <h1
+            className="text-4xl font-extrabold leading-none font-[family-name:var(--font-display)]"
+            style={{ color: "#EDEFF2" }}
+          >
+            PerroSOS MTB
+          </h1>
+          <p
+            className="text-xs mt-1"
+            style={{ color: "#9BA3AC" }}
+          >
+            Calendario de eventos MTB
+          </p>
+        </div>
       </div>
       <button
         onClick={onProfileClick}
