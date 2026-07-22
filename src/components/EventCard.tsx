@@ -4,6 +4,8 @@ import type { Event } from "../types";
 
 const ROT = [-5, 4, -3, 6, -6, 3, -4, 5];
 
+const PENTAGON_POINTS = "50,2 97.5,38 79,95 21,95 2.5,38";
+
 export function Sticker({
   event,
   index,
@@ -40,6 +42,55 @@ export function Sticker({
   const w = dims?.w ?? maxW;
   const h = dims?.h ?? maxH;
 
+  if (event.type === "equipo" && !event.image_url) {
+    return (
+      <div
+        style={{
+          width: maxW,
+          height: maxH,
+          transform: `rotate(${rot}deg)`,
+          boxShadow: "0 3px 8px rgba(0,0,0,0.45)",
+          position: "relative",
+        }}
+        className="shrink-0"
+      >
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          background: "linear-gradient(135deg, #2A2D31, #3D434A)",
+          clipPath: "polygon(50% 2%, 97.5% 38%, 79% 95%, 21% 95%, 2.5% 38%)",
+          position: "relative",
+        }}
+      />
+        <svg
+          viewBox="0 0 100 100"
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+        >
+          <polygon
+            points={PENTAGON_POINTS}
+            fill="none"
+            stroke="#80C6FF"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <img
+          src="/perrosos-logo.svg"
+          alt="Equipo"
+          style={{
+            position: "absolute",
+            top: "18%",
+            left: "18%",
+            width: "64%",
+            height: "64%",
+            opacity: 0.95,
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -62,12 +113,6 @@ export function Sticker({
           onLoad={onImgLoad}
           style={{ width: "100%", height: "100%" }}
           className="object-contain"
-        />
-      ) : event.type === "equipo" ? (
-        <img
-          src="/perrosos-logo.svg"
-          alt="Equipo"
-          style={{ width: maxW * 0.5, height: maxW * 0.5, opacity: 0.9 }}
         />
       ) : (
         size === "small" ? (
