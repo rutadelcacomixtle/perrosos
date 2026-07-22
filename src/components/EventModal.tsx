@@ -358,28 +358,32 @@ export function EventModal({
             </div>
           )}
 
-          <button
-            onClick={() => fileRef.current?.click()}
-            style={{
-              background: "#1D1F23",
-              border: "1px dashed #454B52",
-            }}
-            className="rounded-md px-3 py-3 text-sm flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <ImageIcon size={16} color="#9BA3AC" />
-            <span style={{ color: "#9BA3AC" }}>
-              {form.imageUrl
-                ? "Imagen lista"
-                : "Subir imagen del evento"}
-            </span>
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImage}
-            className="hidden"
-          />
+          {form.type === "comunidad" && (
+            <>
+              <button
+                onClick={() => fileRef.current?.click()}
+                style={{
+                  background: "#1D1F23",
+                  border: "1px dashed #454B52",
+                }}
+                className="rounded-md px-3 py-3 text-sm flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <ImageIcon size={16} color="#9BA3AC" />
+                <span style={{ color: "#9BA3AC" }}>
+                  {form.imageUrl
+                    ? "Imagen lista"
+                    : "Subir imagen del evento"}
+                </span>
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImage}
+                className="hidden"
+              />
+            </>
+          )}
 
           {saveError && (
             <p
