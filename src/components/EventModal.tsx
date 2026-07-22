@@ -274,7 +274,7 @@ export function EventModal({
                 border: "1px solid #34383D",
                 color: "#EDEFF2",
               }}
-              className="rounded-md px-3 py-2 text-sm outline-none font-[family-name:var(--font-mono)] w-28"
+              className="rounded-md px-3 py-2 text-sm outline-none font-[family-name:var(--font-mono)] w-36"
             />
           </div>
 

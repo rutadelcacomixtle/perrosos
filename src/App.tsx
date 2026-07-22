@@ -26,6 +26,14 @@ function formatCardDate(dateStr: string) {
   });
 }
 
+function formatTime12(time: string) {
+  const [h, m] = time.split(":").map(Number);
+  if (h == null || m == null) return time;
+  const period = h >= 12 ? "p.m." : "a.m.";
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+}
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [events, setEvents] = useState<EventWithAttendees[]>([]);
@@ -304,7 +312,7 @@ export default function App() {
                       className="flex items-center gap-1.5 mt-0.5 font-[family-name:var(--font-mono)]"
                       style={{ fontSize: 10.5, color: "#9BA3AC" }}
                     >
-                      <Clock size={9} /> {e.time}
+                        <Clock size={9} /> {formatTime12(e.time)}
                     </div>
                   )}
                   {e.place && (

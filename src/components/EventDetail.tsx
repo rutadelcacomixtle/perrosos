@@ -103,6 +103,14 @@ export function EventDetail({
     });
   }
 
+  function formatTime12(time: string) {
+    const [h, m] = time.split(":").map(Number);
+    if (h == null || m == null) return time;
+    const period = h >= 12 ? "p.m." : "a.m.";
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+  }
+
   function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -294,7 +302,7 @@ export function EventDetail({
                   border: "1px solid #34383D",
                   color: "#EDEFF2",
                 }}
-                className="rounded-md px-3 py-2 text-sm outline-none font-[family-name:var(--font-mono)] w-28"
+                className="rounded-md px-3 py-2 text-sm outline-none font-[family-name:var(--font-mono)] w-36"
               />
               <span className="flex items-center text-xs" style={{ color: "#6B747C" }}>
                 hora de encuentro
@@ -451,7 +459,7 @@ export function EventDetail({
                   <>
                     <span style={{ color: "#34383D" }}>|</span>
                     <span className="flex items-center gap-1 text-base font-semibold" style={{ color: accent }}>
-                      <Clock size={14} /> {event.time}
+                      <Clock size={14} /> {formatTime12(event.time)}
                     </span>
                   </>
                 )}
