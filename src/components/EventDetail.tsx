@@ -55,6 +55,20 @@ export function EventDetail({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState(event.image_url);
 
+  const accent = event.type === "equipo" ? "#80C6FF" : "#F5C842";
+
+  function formatLongDate(dateStr: string) {
+    const parts = dateStr.split("-").map(Number);
+    const y = parts[0] ?? 0;
+    const m = parts[1] ?? 1;
+    const d = parts[2] ?? 1;
+    return new Date(y, m - 1, d).toLocaleDateString("es-MX", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
+
   function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -395,13 +409,15 @@ export function EventDetail({
               className="rounded-xl p-4 flex flex-col gap-3"
               style={{ background: "#1D1F23", border: "1px solid #24272B" }}
             >
-              <div className="flex items-center gap-2" style={{ color: "#9BA3AC" }}>
-                <span className="font-[family-name:var(--font-mono)] text-sm">{event.date}</span>
+              <div className="flex items-center gap-2" style={{ color: "#EDEFF2" }}>
+                <span className="font-[family-name:var(--font-display)] text-base font-semibold" style={{ color: accent }}>
+                  {formatLongDate(event.date)}
+                </span>
                 {event.time && (
                   <>
                     <span style={{ color: "#34383D" }}>|</span>
-                    <span className="flex items-center gap-1 text-sm">
-                      <Clock size={12} /> {event.time}
+                    <span className="flex items-center gap-1 text-base font-semibold" style={{ color: accent }}>
+                      <Clock size={14} /> {event.time}
                     </span>
                   </>
                 )}
