@@ -274,7 +274,7 @@ export default function App() {
                   <div className="h-px flex-1" style={{ background: "#34383D" }} />
                   <span
                     className="font-[family-name:var(--font-display)] uppercase text-xs tracking-wide whitespace-nowrap"
-                    style={{ color: "#9BA3AC" }}
+                    style={{ color: "#EDEFF2" }}
                   >
                     {formatCardDate(group.date)}
                   </span>
