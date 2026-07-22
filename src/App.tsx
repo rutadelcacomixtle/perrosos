@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Trash2, Clock, MapPin, Users, TrendingUp, Gauge, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, MapPin, Users, TrendingUp, Gauge, ChevronDown, ChevronUp } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
 import { AuthScreen } from "./components/AuthScreen";
@@ -7,6 +7,7 @@ import { Header, ElevationDivider } from "./components/Header";
 import { Calendar } from "./components/Calendar";
 import { Sticker, TipoBadge } from "./components/EventCard";
 import { EventModal } from "./components/EventModal";
+import { EventDetail } from "./components/EventDetail";
 import { ProfileScreen } from "./components/ProfileScreen";
 import type { EventWithAttendees, Event } from "./types";
 
@@ -18,6 +19,7 @@ export default function App() {
   const [modalDate, setModalDate] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<EventWithAttendees | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -106,11 +108,6 @@ export default function App() {
     return events.filter((e) => e.date >= now);
   }, [events]);
 
-  function removeEvent(id: string) {
-    supabase.from("eventos").delete().eq("id", id);
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-  }
-
   const dayEventsForModal = modalDate
     ? events.filter((e) => e.date === modalDate)
     : [];
@@ -121,6 +118,22 @@ export default function App() {
 
   if (showProfile) {
     return <ProfileScreen user={user} onBack={() => setShowProfile(false)} />;
+  }
+
+  if (selectedEvent) {
+    return (
+      <EventDetail
+        event={selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        onSaved={() => {
+          setSelectedEvent(null);
+        }}
+        onDeleted={() => {
+          setSelectedEvent(null);
+          setEvents((prev) => prev.filter((e) => e.id !== selectedEvent.id));
+        }}
+      />
+    );
   }
 
   const visibleUpcoming = showAllUpcoming ? upcoming : upcoming.slice(0, INITIAL_VISIBLE);
@@ -151,8 +164,9 @@ export default function App() {
             {visibleUpcoming.map((e, i) => (
               <div
                 key={e.id}
+                onClick={() => setSelectedEvent(e)}
                 style={{ background: "#17181B", border: "1px solid #24272B" }}
-                className="rounded-lg p-2 flex items-center gap-3"
+                className="rounded-lg p-2 flex items-center gap-3 cursor-pointer"
               >
                 <Sticker event={e} index={i} size="large" />
                 <div className="flex-1 min-w-0">
@@ -220,13 +234,6 @@ export default function App() {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={() => removeEvent(e.id)}
-                  className="p-1.5 shrink-0 cursor-pointer"
-                  aria-label="Eliminar"
-                >
-                  <Trash2 size={16} color="#6B747C" />
-                </button>
               </div>
             ))}
           </div>
