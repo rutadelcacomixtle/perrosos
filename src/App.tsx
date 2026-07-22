@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Clock, MapPin, Users, TrendingUp, Gauge, ChevronDown, ChevronUp } from "lucide-react";
+import { Clock, MapPin, Users, TrendingUp, Gauge, ChevronDown, ChevronUp, Check } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
 import { AuthScreen } from "./components/AuthScreen";
@@ -116,6 +116,39 @@ export default function App() {
     return <AuthScreen />;
   }
 
+  async function toggleAttend(e: EventWithAttendees) {
+    if (!user) return;
+    const isAttending = e.attendees.some((a) => a.user_id === user.id);
+    if (isAttending) {
+      await supabase
+        .from("event_attendees")
+        .delete()
+        .eq("event_id", e.id)
+        .eq("user_id", user.id);
+      setEvents((prev) =>
+        prev.map((ev) =>
+          ev.id === e.id
+            ? { ...ev, attendees: ev.attendees.filter((a) => a.user_id !== user.id) }
+            : ev
+        )
+      );
+    } else {
+      const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email || "";
+      await supabase.from("event_attendees").insert({
+        event_id: e.id,
+        user_id: user.id,
+        display_name: name,
+      });
+      setEvents((prev) =>
+        prev.map((ev) =>
+          ev.id === e.id
+            ? { ...ev, attendees: [...ev.attendees, { event_id: e.id, user_id: user.id, display_name: name, avatar_url: null }] }
+            : ev
+        )
+      );
+    }
+  }
+
   if (showProfile) {
     return <ProfileScreen user={user} onBack={() => setShowProfile(false)} />;
   }
@@ -124,6 +157,7 @@ export default function App() {
     return (
       <EventDetail
         event={selectedEvent}
+        user={user}
         onClose={() => setSelectedEvent(null)}
         onSaved={() => {
           setSelectedEvent(null);
@@ -234,6 +268,25 @@ export default function App() {
                     </div>
                   )}
                 </div>
+                <button
+                  onClick={(ev) => { ev.stopPropagation(); toggleAttend(e); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-[family-name:var(--font-display)] uppercase tracking-wide cursor-pointer shrink-0"
+                  style={{
+                    background: e.attendees.some((a) => a.user_id === user.id)
+                      ? (e.type === "equipo" ? "#80C6FF" : "#F3443F")
+                      : "transparent",
+                    color: e.attendees.some((a) => a.user_id === user.id)
+                      ? "#0e0f11"
+                      : (e.type === "equipo" ? "#80C6FF" : "#F3443F"),
+                    border: `1px solid ${e.type === "equipo" ? "#80C6FF" : "#F3443F"}`,
+                  }}
+                >
+                  {e.attendees.some((a) => a.user_id === user.id) ? (
+                    <><Check size={12} /> Voy</>
+                  ) : (
+                    "Asistiré"
+                  )}
+                </button>
               </div>
             ))}
           </div>

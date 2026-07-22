@@ -10,6 +10,7 @@ import {
   Image as ImageIcon,
   ExternalLink,
   Save,
+  Check,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { uploadEventImage } from "../lib/upload";
@@ -17,11 +18,13 @@ import { MapPicker } from "./MapPicker";
 import { AttendeeList } from "./AttendeeList";
 import { TipoBadge } from "./EventCard";
 import type { EventWithAttendees } from "../types";
+import type { User } from "@supabase/supabase-js";
 
 const DIFICULTADES = ["Facil", "Moderada", "Dificil"] as const;
 
 interface EventDetailProps {
   event: EventWithAttendees;
+  user: User;
   onClose: () => void;
   onSaved: () => void;
   onDeleted: () => void;
@@ -29,6 +32,7 @@ interface EventDetailProps {
 
 export function EventDetail({
   event,
+  user,
   onClose,
   onSaved,
   onDeleted,
@@ -54,8 +58,33 @@ export function EventDetail({
   );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState(event.image_url);
+  const [localAttendees, setLocalAttendees] = useState(event.attendees);
 
   const accent = event.type === "equipo" ? "#80C6FF" : "#F3443F";
+
+  const isAttending = localAttendees.some((a) => a.user_id === user.id);
+
+  async function toggleAttend() {
+    if (isAttending) {
+      await supabase
+        .from("event_attendees")
+        .delete()
+        .eq("event_id", event.id)
+        .eq("user_id", user.id);
+      setLocalAttendees((prev) => prev.filter((a) => a.user_id !== user.id));
+    } else {
+      const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email || "";
+      await supabase.from("event_attendees").insert({
+        event_id: event.id,
+        user_id: user.id,
+        display_name: name,
+      });
+      setLocalAttendees((prev) => [
+        ...prev,
+        { event_id: event.id, user_id: user.id, display_name: name, avatar_url: null },
+      ]);
+    }
+  }
 
   function formatLongDate(dateStr: string) {
     const parts = dateStr.split("-").map(Number);
@@ -466,14 +495,14 @@ export function EventDetail({
                 </div>
               )}
 
-              {event.type === "equipo" && event.attendees.length > 0 && (
+              {localAttendees.length > 0 && (
                 <div
                   className="flex flex-wrap items-center gap-2 pt-2"
                   style={{ borderTop: "1px solid #24272B" }}
                 >
-                  <Users size={12} style={{ color: "#80C6FF" }} />
+                  <Users size={12} style={{ color: accent }} />
                   <span className="text-xs" style={{ color: "#9BA3AC" }}>
-                    {event.attendees.map((a) => a.display_name).join(", ")}
+                    {localAttendees.map((a) => a.display_name).join(", ")}
                   </span>
                 </div>
               )}
@@ -490,6 +519,18 @@ export function EventDetail({
                 </a>
               )}
             </div>
+
+            <button
+              onClick={toggleAttend}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-[family-name:var(--font-display)] uppercase tracking-wide cursor-pointer"
+              style={{
+                background: isAttending ? accent : "transparent",
+                color: isAttending ? "#0e0f11" : accent,
+                border: `1px solid ${accent}`,
+              }}
+            >
+              {isAttending ? <><Check size={16} /> Voy a asistir</> : "Asistiré"}
+            </button>
           </div>
         )}
       </div>
