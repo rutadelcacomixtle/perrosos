@@ -403,7 +403,7 @@ export function EventModal({
                   ? "#80C6FF"
                   : "#F3443F"
                 : "#2A2D31",
-              color: "#0e0f11",
+              color: form.type === "equipo" ? "#0e0f11" : "#EDEFF2",
             }}
             className="rounded-md px-3 py-2.5 font-[family-name:var(--font-display)] uppercase tracking-wide text-sm flex items-center justify-center gap-2 mt-1 disabled:cursor-not-allowed cursor-pointer"
           >

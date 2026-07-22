@@ -542,7 +542,7 @@ export function EventDetail({
                     <div key={a.user_id} className="flex items-center gap-2">
                       <div
                         className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
-                        style={{ background: accent, color: "#0e0f11" }}
+                        style={{ background: accent, color: event.type === "equipo" ? "#0e0f11" : "#EDEFF2" }}
                       >
                         {(a.display_name || "?").charAt(0).toUpperCase()}
                       </div>
@@ -550,7 +550,7 @@ export function EventDetail({
                         {a.display_name}
                       </span>
                       {a.user_id === user.id && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: accent, color: "#0e0f11" }}>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: accent, color: event.type === "equipo" ? "#0e0f11" : "#EDEFF2" }}>
                           Tú
                         </span>
                       )}

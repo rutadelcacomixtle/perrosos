@@ -362,7 +362,7 @@ export default function App() {
                       ? (e.type === "equipo" ? "#80C6FF" : "#F3443F")
                       : "transparent",
                     color: e.attendees.some((a) => a.user_id === user.id)
-                      ? "#0e0f11"
+                      ? (e.type === "equipo" ? "#0e0f11" : "#EDEFF2")
                       : (e.type === "equipo" ? "#80C6FF" : "#EDEFF2"),
                     border: `1px solid ${e.type === "equipo" ? "#80C6FF" : "#F3443F"}`,
                   }}

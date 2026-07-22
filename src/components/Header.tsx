@@ -7,7 +7,7 @@ export function Header({ user, onProfileClick }: { user: User; onProfileClick: (
   return (
     <div className="flex items-center justify-between mb-1">
       <div className="flex items-center gap-2 sm:gap-3">
-        <img src="/perrosos-logo.svg" alt="PerroSOS MTB" className="h-10 w-10 sm:h-14 sm:w-14" />
+        <img src="/perrosos-logo.svg" alt="PerroSOS MTB" className="h-12 w-12 sm:h-[67px] sm:w-[67px]" />
         <div>
           <h1
             className="text-2xl sm:text-4xl font-extrabold leading-none font-[family-name:var(--font-display)]"
@@ -28,7 +28,7 @@ export function Header({ user, onProfileClick }: { user: User; onProfileClick: (
         className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold cursor-pointer shrink-0"
         style={{
           background: "linear-gradient(135deg, #F3443F, #c23a35)",
-          color: "#0e0f11",
+          color: "#EDEFF2",
         }}
         aria-label="Perfil"
       >

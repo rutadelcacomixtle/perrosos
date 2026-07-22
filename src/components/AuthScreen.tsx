@@ -206,7 +206,7 @@ export function AuthScreen() {
             className="group w-full py-3.5 px-4 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer font-[family-name:var(--font-display)] uppercase tracking-wide"
             style={{
               background: "linear-gradient(135deg, #F3443F, #c23a35)",
-              color: "#0e0f11",
+              color: "#EDEFF2",
             }}
           >
             <span>{loading ? "Cargando..." : mode === "login" ? "Iniciar sesión" : "Crear cuenta"}</span>

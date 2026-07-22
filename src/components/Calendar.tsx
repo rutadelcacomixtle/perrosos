@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { EventWithAttendees } from "../types";
 import { Sticker } from "./EventCard";
 
@@ -23,16 +24,26 @@ interface CalendarProps {
 
 export function Calendar({ events, onDayClick }: CalendarProps) {
   const today = new Date();
-  const view = { y: today.getFullYear(), m: today.getMonth() };
+  const [viewY, setViewY] = useState(today.getFullYear());
+  const [viewM, setViewM] = useState(today.getMonth());
+
+  const prevMonth = () => {
+    if (viewM === 0) { setViewM(11); setViewY(viewY - 1); }
+    else setViewM(viewM - 1);
+  };
+  const nextMonth = () => {
+    if (viewM === 11) { setViewM(0); setViewY(viewY + 1); }
+    else setViewM(viewM + 1);
+  };
 
   const grid = useMemo(() => {
-    const firstDay = (new Date(view.y, view.m, 1).getDay() + 6) % 7;
-    const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+    const firstDay = (new Date(viewY, viewM, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(viewY, viewM + 1, 0).getDate();
     const cells: (number | null)[] = [];
     for (let i = 0; i < firstDay; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
     return cells;
-  }, [view.y, view.m]);
+  }, [viewY, viewM]);
 
   const eventsByDay = useMemo(() => {
     const map: Record<string, EventWithAttendees[]> = {};
@@ -44,17 +55,29 @@ export function Calendar({ events, onDayClick }: CalendarProps) {
 
   const isToday = (day: number) =>
     day === today.getDate() &&
-    view.m === today.getMonth() &&
-    view.y === today.getFullYear();
+    viewM === today.getMonth() &&
+    viewY === today.getFullYear();
 
   return (
     <>
       <div className="flex items-center justify-between mt-3 mb-4">
-        <div />
+        <button
+          onClick={prevMonth}
+          className="p-1.5 rounded-full cursor-pointer"
+          style={{ background: "#1D1F23", border: "1px solid #34383D" }}
+        >
+          <ChevronLeft size={16} color="#9BA3AC" />
+        </button>
         <span className="font-[family-name:var(--font-display)] uppercase text-xl tracking-wide" style={{ color: "#EDEFF2" }}>
-          {MESES[view.m]} <span style={{ color: "#80C6FF" }}>{view.y}</span>
+          {MESES[viewM]} <span style={{ color: "#80C6FF" }}>{viewY}</span>
         </span>
-        <div />
+        <button
+          onClick={nextMonth}
+          className="p-1.5 rounded-full cursor-pointer"
+          style={{ background: "#1D1F23", border: "1px solid #34383D" }}
+        >
+          <ChevronRight size={16} color="#9BA3AC" />
+        </button>
       </div>
 
       <div className="grid grid-cols-7 mb-1">
@@ -72,7 +95,7 @@ export function Calendar({ events, onDayClick }: CalendarProps) {
       <div className="grid grid-cols-7 gap-1">
         {grid.map((day, idx) => {
           if (day === null) return <div key={idx} />;
-          const key = toKey(view.y, view.m, day);
+          const key = toKey(viewY, viewM, day);
           const dayEvents = eventsByDay[key] ?? [];
 
           return (
