@@ -1,3 +1,4 @@
+import { useState, useCallback } from "react";
 import { Image as ImageIcon, Users } from "lucide-react";
 import type { Event } from "../types";
 
@@ -13,8 +14,31 @@ export function Sticker({
   size?: "small" | "large";
 }) {
   const rot = ROT[index % ROT.length]!;
-  const w = size === "small" ? 38 : 84;
-  const h = size === "small" ? 67 : 149;
+  const maxW = size === "small" ? 38 : 84;
+  const maxH = size === "small" ? 67 : 149;
+
+  const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
+
+  const onImgLoad = useCallback(
+    (ev: React.SyntheticEvent<HTMLImageElement>) => {
+      const { naturalWidth, naturalHeight } = ev.currentTarget;
+      if (!naturalWidth || !naturalHeight) return;
+      const ratio = naturalWidth / naturalHeight;
+      let w: number, h: number;
+      if (ratio >= maxW / maxH) {
+        w = maxW;
+        h = Math.round(maxW / ratio);
+      } else {
+        h = maxH;
+        w = Math.round(maxH * ratio);
+      }
+      setDims({ w, h });
+    },
+    [maxW, maxH]
+  );
+
+  const w = dims?.w ?? maxW;
+  const h = dims?.h ?? maxH;
 
   return (
     <div
@@ -35,6 +59,7 @@ export function Sticker({
         <img
           src={event.image_url}
           alt={event.title}
+          onLoad={onImgLoad}
           style={{ width: "100%", height: "100%" }}
           className="object-contain"
         />
@@ -42,7 +67,7 @@ export function Sticker({
         <img
           src="/perrosos-logo.svg"
           alt="Equipo"
-          style={{ width: w * 0.5, height: w * 0.5, opacity: 0.9 }}
+          style={{ width: maxW * 0.5, height: maxW * 0.5, opacity: 0.9 }}
         />
       ) : (
         size === "small" ? (
