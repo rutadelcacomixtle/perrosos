@@ -159,6 +159,24 @@ export default function App() {
     return events.filter((e) => e.date >= now);
   }, [events]);
 
+  const visibleUpcoming = useMemo(
+    () => upcoming.slice(0, showAllUpcoming ? upcoming.length : INITIAL_VISIBLE),
+    [upcoming, showAllUpcoming]
+  );
+
+  const groupedUpcoming = useMemo(() => {
+    const groups: { date: string; events: EventWithAttendees[] }[] = [];
+    for (const e of visibleUpcoming) {
+      const last = groups[groups.length - 1];
+      if (last && last.date === e.date) {
+        last.events.push(e);
+      } else {
+        groups.push({ date: e.date, events: [e] });
+      }
+    }
+    return groups;
+  }, [visibleUpcoming]);
+
   const dayEventsForModal = modalDate
     ? events.filter((e) => e.date === modalDate)
     : [];
@@ -225,8 +243,6 @@ export default function App() {
     );
   }
 
-  const visibleUpcoming = showAllUpcoming ? upcoming : upcoming.slice(0, INITIAL_VISIBLE);
-
   return (
     <div
       style={{ background: "#0e0f11", color: "#EDEFF2", minHeight: "100vh" }}
@@ -249,8 +265,23 @@ export default function App() {
               Sin eventos por venir. Toca un dia del calendario para agregar uno.
             </p>
           )}
-          <div className="flex flex-col gap-2">
-            {visibleUpcoming.map((e, i) => (
+          <div className="flex flex-col gap-3">
+            {groupedUpcoming.map((group) => (
+              <div key={group.date}>
+                <div
+                  className="flex items-center gap-2 mb-1.5"
+                >
+                  <div className="h-px flex-1" style={{ background: "#34383D" }} />
+                  <span
+                    className="font-[family-name:var(--font-display)] uppercase text-xs tracking-wide whitespace-nowrap"
+                    style={{ color: "#9BA3AC" }}
+                  >
+                    {formatCardDate(group.date)}
+                  </span>
+                  <div className="h-px flex-1" style={{ background: "#34383D" }} />
+                </div>
+                <div className="flex flex-col gap-2">
+                  {group.events.map((e, i) => (
               <div
                 key={e.id}
                 onClick={() => setSelectedEvent(e)}
@@ -268,17 +299,14 @@ export default function App() {
                   >
                     {e.title}
                   </p>
-                  <div
-                    className="flex items-center gap-2 mt-0.5 font-[family-name:var(--font-mono)]"
-                    style={{ fontSize: 10.5, color: "#9BA3AC" }}
-                  >
-                    <span>{formatCardDate(e.date)}</span>
-                    {e.time && (
-                      <span className="flex items-center gap-1">
-                        <Clock size={9} /> {e.time}
-                      </span>
-                    )}
-                  </div>
+                  {e.time && (
+                    <div
+                      className="flex items-center gap-1.5 mt-0.5 font-[family-name:var(--font-mono)]"
+                      style={{ fontSize: 10.5, color: "#9BA3AC" }}
+                    >
+                      <Clock size={9} /> {e.time}
+                    </div>
+                  )}
                   {e.place && (
                     <div
                       className="flex items-center gap-1 mt-0.5"
@@ -345,6 +373,9 @@ export default function App() {
                     "Asistiré"
                   )}
                 </button>
+              </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
