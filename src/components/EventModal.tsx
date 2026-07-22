@@ -360,6 +360,17 @@ export function EventModal({
 
           {form.type === "comunidad" && (
             <>
+              <input
+                value={form.sourceUrl}
+                onChange={(ev) => updateForm("sourceUrl", ev.target.value)}
+                placeholder="Enlace al post original (FB, IG, TT...)"
+                style={{
+                  background: "#0e0f11",
+                  border: "1px solid #34383D",
+                  color: "#EDEFF2",
+                }}
+                className="rounded-md px-3 py-2 text-sm outline-none"
+              />
               <button
                 onClick={() => fileRef.current?.click()}
                 style={{
