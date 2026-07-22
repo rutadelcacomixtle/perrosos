@@ -13,13 +13,14 @@ export function Sticker({
   size?: "small" | "large";
 }) {
   const rot = ROT[index % ROT.length]!;
-  const dim = size === "small" ? 34 : 84;
+  const w = size === "small" ? 38 : 84;
+  const h = size === "small" ? 67 : 149;
 
   return (
     <div
       style={{
-        width: dim,
-        height: dim,
+        width: w,
+        height: h,
         transform: `rotate(${rot}deg)`,
         background: event.image_url
           ? `url(${event.image_url}) center/cover no-repeat`
@@ -36,7 +37,7 @@ export function Sticker({
         <img
           src="/perrosos-logo.svg"
           alt="Equipo"
-          style={{ width: dim * 0.55, height: dim * 0.55, opacity: 0.9 }}
+          style={{ width: w * 0.5, height: w * 0.5, opacity: 0.9 }}
         />
       ) : (
         size === "small" ? (

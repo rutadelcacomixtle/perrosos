@@ -288,7 +288,7 @@ export default function App() {
                   )}
                   {e.type === "equipo" && (
                     <div
-                      className="flex flex-wrap items-center gap-2 mt-0.5 font-[family-name:var(--font-mono)]"
+                      className="flex items-center gap-2 mt-0.5 font-[family-name:var(--font-mono)] whitespace-nowrap"
                       style={{ fontSize: 10, color: "#80C6FF" }}
                     >
                       {e.distance && (
