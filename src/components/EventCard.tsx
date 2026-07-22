@@ -22,9 +22,7 @@ export function Sticker({
         width: w,
         height: h,
         transform: `rotate(${rot}deg)`,
-        background: event.image_url
-          ? `url(${event.image_url}) center/cover no-repeat`
-          : "linear-gradient(135deg, #2A2D31, #3D434A)",
+        background: "linear-gradient(135deg, #2A2D31, #3D434A)",
         border:
           event.type === "equipo"
             ? "2px solid #80C6FF"
@@ -33,7 +31,14 @@ export function Sticker({
       }}
       className="rounded-sm flex items-center justify-center shrink-0 overflow-hidden"
     >
-      {event.image_url ? null : event.type === "equipo" ? (
+      {event.image_url ? (
+        <img
+          src={event.image_url}
+          alt={event.title}
+          style={{ width: "100%", height: "100%" }}
+          className="object-contain"
+        />
+      ) : event.type === "equipo" ? (
         <img
           src="/perrosos-logo.svg"
           alt="Equipo"
