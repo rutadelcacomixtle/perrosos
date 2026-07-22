@@ -187,12 +187,13 @@ export function EventDetail({
         {imageUrl && (
           <div
             className="rounded-xl overflow-hidden mb-4"
-            style={{ height: 200, background: "#1D1F23" }}
+            style={{ background: "#1D1F23" }}
           >
             <img
               src={imageUrl}
               alt={event.title}
-              className="w-full h-full object-cover"
+              className="w-full object-contain"
+              style={{ maxHeight: "60vh" }}
             />
           </div>
         )}
