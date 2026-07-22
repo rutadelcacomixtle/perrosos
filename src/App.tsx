@@ -74,7 +74,7 @@ export default function App() {
 
   useEffect(() => {
     const channel = supabase
-      .channel("eventos-realtime")
+      .channel("db-changes")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "eventos" },
@@ -89,9 +89,47 @@ export default function App() {
                 a.date.localeCompare(b.date)
               )
             );
+          } else if (payload.eventType === "UPDATE") {
+            setEvents((prev) =>
+              prev.map((ev) =>
+                ev.id === payload.new.id
+                  ? { ...ev, ...(payload.new as Event) }
+                  : ev
+              )
+            );
           } else if (payload.eventType === "DELETE") {
             setEvents((prev) =>
               prev.filter((e) => e.id !== payload.old.id)
+            );
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "event_attendees" },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const row = payload.new as { event_id: string; user_id: string; display_name: string | null; avatar_url: string | null };
+            setEvents((prev) =>
+              prev.map((ev) =>
+                ev.id === row.event_id
+                  ? {
+                      ...ev,
+                      attendees: ev.attendees.some((a) => a.user_id === row.user_id)
+                        ? ev.attendees
+                        : [...ev.attendees, { event_id: row.event_id, user_id: row.user_id, display_name: row.display_name, avatar_url: row.avatar_url }],
+                    }
+                  : ev
+              )
+            );
+          } else if (payload.eventType === "DELETE") {
+            const row = payload.old as { event_id: string; user_id: string };
+            setEvents((prev) =>
+              prev.map((ev) =>
+                ev.id === row.event_id
+                  ? { ...ev, attendees: ev.attendees.filter((a) => a.user_id !== row.user_id) }
+                  : ev
+              )
             );
           }
         }
