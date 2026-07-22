@@ -70,10 +70,10 @@ export function Sticker({
           alt="Equipo"
           style={{
             position: "absolute",
-            top: "15%",
-            left: "15%",
-            width: "70%",
-            height: "70%",
+            top: "7.5%",
+            left: "7.5%",
+            width: "85%",
+            height: "85%",
             opacity: 0.95,
           }}
         />
