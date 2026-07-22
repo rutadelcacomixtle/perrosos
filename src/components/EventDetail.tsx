@@ -96,6 +96,7 @@ export function EventDetail({
     const m = parts[1] ?? 1;
     const d = parts[2] ?? 1;
     return new Date(y, m - 1, d).toLocaleDateString("es-MX", {
+      weekday: "long",
       day: "numeric",
       month: "long",
       year: "numeric",

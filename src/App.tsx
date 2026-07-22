@@ -13,6 +13,19 @@ import type { EventWithAttendees, Event } from "./types";
 
 const INITIAL_VISIBLE = 3;
 
+function formatCardDate(dateStr: string) {
+  const parts = dateStr.split("-").map(Number);
+  const y = parts[0] ?? 0;
+  const m = parts[1] ?? 1;
+  const d = parts[2] ?? 1;
+  return new Date(y, m - 1, d).toLocaleDateString("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [events, setEvents] = useState<EventWithAttendees[]>([]);
@@ -259,7 +272,7 @@ export default function App() {
                     className="flex items-center gap-2 mt-0.5 font-[family-name:var(--font-mono)]"
                     style={{ fontSize: 10.5, color: "#9BA3AC" }}
                   >
-                    <span>{e.date}</span>
+                    <span>{formatCardDate(e.date)}</span>
                     {e.time && (
                       <span className="flex items-center gap-1">
                         <Clock size={9} /> {e.time}
