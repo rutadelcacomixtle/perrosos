@@ -25,7 +25,7 @@ export function Header({ user, onProfileClick }: { user: User; onProfileClick: (
       </div>
       <button
         onClick={onProfileClick}
-        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold cursor-pointer shrink-0"
+        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold cursor-pointer shrink-0"
         style={{
           background: "linear-gradient(135deg, #F3443F, #c23a35)",
           color: "#EDEFF2",
