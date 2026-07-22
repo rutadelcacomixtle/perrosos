@@ -131,10 +131,10 @@ export function MapPicker({
 
       const map = L.map(compactMapRef.current, {
         zoomControl: false,
-        touchZoom: true,
-        dragging: true,
-        doubleClickZoom: true,
-        scrollWheelZoom: true,
+        touchZoom: false,
+        dragging: false,
+        doubleClickZoom: false,
+        scrollWheelZoom: false,
         maxZoom: 19,
       }).setView([lat, lng], placeLat ? 16 : 13);
 
