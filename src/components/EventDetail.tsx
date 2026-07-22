@@ -254,7 +254,7 @@ export function EventDetail({
                 onClick={() => setType("comunidad")}
                 style={{
                   background: type === "comunidad" ? "#F3443F" : "transparent",
-                  color: type === "comunidad" ? "#0e0f11" : "#9BA3AC",
+                  color: type === "comunidad" ? "#EDEFF2" : "#9BA3AC",
                 }}
                 className="flex-1 py-2 text-xs font-[family-name:var(--font-display)] uppercase tracking-wide cursor-pointer"
               >
@@ -521,7 +521,7 @@ export function EventDetail({
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-[family-name:var(--font-display)] uppercase tracking-wide cursor-pointer"
               style={{
                 background: isAttending ? accent : "transparent",
-                color: isAttending ? "#0e0f11" : accent,
+                color: isAttending ? "#0e0f11" : (event.type === "equipo" ? "#80C6FF" : "#EDEFF2"),
                 border: `1px solid ${accent}`,
               }}
             >
