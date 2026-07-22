@@ -204,36 +204,36 @@ export default function App() {
                 key={e.id}
                 onClick={() => setSelectedEvent(e)}
                 style={{ background: "#17181B", border: "1px solid #24272B" }}
-                className="rounded-lg p-2 flex items-center gap-3 cursor-pointer"
+                className="rounded-lg p-2 flex items-start gap-2.5 cursor-pointer"
               >
-                <Sticker event={e} index={i} size="large" />
+                <Sticker event={e} index={i} size="small" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <TipoBadge type={e.type} />
                   </div>
                   <p
-                    className="font-[family-name:var(--font-display)] uppercase text-base leading-tight truncate"
+                    className="font-[family-name:var(--font-display)] uppercase text-sm leading-tight truncate"
                     style={{ color: "#EDEFF2" }}
                   >
                     {e.title}
                   </p>
                   <div
-                    className="flex items-center gap-3 mt-0.5 font-[family-name:var(--font-mono)]"
-                    style={{ fontSize: 11, color: "#9BA3AC" }}
+                    className="flex items-center gap-2 mt-0.5 font-[family-name:var(--font-mono)]"
+                    style={{ fontSize: 10.5, color: "#9BA3AC" }}
                   >
                     <span>{e.date}</span>
                     {e.time && (
                       <span className="flex items-center gap-1">
-                        <Clock size={10} /> {e.time}
+                        <Clock size={9} /> {e.time}
                       </span>
                     )}
                   </div>
                   {e.place && (
                     <div
-                      className="flex items-center gap-1.5 mt-0.5"
-                      style={{ fontSize: 11, color: "#6B747C" }}
+                      className="flex items-center gap-1 mt-0.5"
+                      style={{ fontSize: 10.5, color: "#6B747C" }}
                     >
-                      <MapPin size={10} className="shrink-0" />{" "}
+                      <MapPin size={9} className="shrink-0" />{" "}
                       <span className="truncate">{e.place}</span>
                       {e.place_lat != null && e.place_lng != null && (
                         <a
@@ -250,34 +250,34 @@ export default function App() {
                   )}
                   {e.type === "equipo" && (
                     <div
-                      className="flex flex-wrap items-center gap-2.5 mt-1 font-[family-name:var(--font-mono)]"
-                      style={{ fontSize: 10.5, color: "#80C6FF" }}
+                      className="flex flex-wrap items-center gap-2 mt-0.5 font-[family-name:var(--font-mono)]"
+                      style={{ fontSize: 10, color: "#80C6FF" }}
                     >
                       {e.distance && (
                         <span className="flex items-center gap-1">
-                          <TrendingUp size={10} /> {e.distance} km
+                          <TrendingUp size={9} /> {e.distance} km
                         </span>
                       )}
                       {e.elevation && <span>+{e.elevation} m</span>}
                       {e.difficulty && (
                         <span className="flex items-center gap-1">
-                          <Gauge size={10} /> {e.difficulty}
+                          <Gauge size={9} /> {e.difficulty}
                         </span>
                       )}
                     </div>
                   )}
                   {e.attendees.length > 0 && (
                     <div
-                      className="flex items-center gap-1.5 mt-1 font-[family-name:var(--font-mono)]"
-                      style={{ fontSize: 10.5, color: e.type === "equipo" ? "#80C6FF" : "#F3443F" }}
+                      className="flex items-center gap-1 mt-0.5 font-[family-name:var(--font-mono)] whitespace-nowrap"
+                      style={{ fontSize: 10, color: e.type === "equipo" ? "#80C6FF" : "#F3443F" }}
                     >
-                      <Users size={10} /> {e.attendees.length} confirmados
+                      <Users size={9} /> {e.attendees.length} confirmados
                     </div>
                   )}
                 </div>
                 <button
                   onClick={(ev) => { ev.stopPropagation(); toggleAttend(e); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-[family-name:var(--font-display)] uppercase tracking-wide cursor-pointer shrink-0"
+                  className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-[family-name:var(--font-display)] uppercase tracking-wide cursor-pointer shrink-0"
                   style={{
                     background: e.attendees.some((a) => a.user_id === user.id)
                       ? (e.type === "equipo" ? "#80C6FF" : "#F3443F")
@@ -289,7 +289,7 @@ export default function App() {
                   }}
                 >
                   {e.attendees.some((a) => a.user_id === user.id) ? (
-                    <><Check size={12} /> Voy</>
+                    <><Check size={10} /> Voy</>
                   ) : (
                     "Asistiré"
                   )}

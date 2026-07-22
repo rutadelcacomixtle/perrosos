@@ -6,17 +6,17 @@ export function Header({ user, onProfileClick }: { user: User; onProfileClick: (
 
   return (
     <div className="flex items-center justify-between mb-1">
-      <div className="flex items-center gap-3">
-        <img src="/perrosos-logo.svg" alt="PerroSOS MTB" className="h-14 w-14" />
+      <div className="flex items-center gap-2 sm:gap-3">
+        <img src="/perrosos-logo.svg" alt="PerroSOS MTB" className="h-10 w-10 sm:h-14 sm:w-14" />
         <div>
           <h1
-            className="text-4xl font-extrabold leading-none font-[family-name:var(--font-display)]"
+            className="text-2xl sm:text-4xl font-extrabold leading-none font-[family-name:var(--font-display)]"
             style={{ color: "#EDEFF2" }}
           >
             PerroSOS MTB
           </h1>
           <p
-            className="text-xs mt-1"
+            className="text-[10px] sm:text-xs mt-0.5 sm:mt-1"
             style={{ color: "#9BA3AC" }}
           >
             Calendario de eventos MTB

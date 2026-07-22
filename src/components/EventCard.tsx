@@ -30,14 +30,21 @@ export function Sticker({
             : "2px solid #EDEFF2",
         boxShadow: "0 3px 8px rgba(0,0,0,0.45)",
       }}
-      className="rounded-sm flex items-center justify-center shrink-0"
+      className="rounded-sm flex items-center justify-center shrink-0 overflow-hidden"
     >
-      {!event.image_url &&
-        (size === "small" ? (
+      {event.image_url ? null : event.type === "equipo" ? (
+        <img
+          src="/perrosos-logo.svg"
+          alt="Equipo"
+          style={{ width: dim * 0.55, height: dim * 0.55, opacity: 0.9 }}
+        />
+      ) : (
+        size === "small" ? (
           <ImageIcon size={14} color="#EDEFF2" strokeWidth={1.5} />
         ) : (
           <ImageIcon size={26} color="#EDEFF2" strokeWidth={1.5} />
-        ))}
+        )
+      )}
     </div>
   );
 }
