@@ -24,7 +24,7 @@ export function Header({ user, onProfileClick }: { user: User; onProfileClick: (
         onClick={onProfileClick}
         className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold cursor-pointer shrink-0"
         style={{
-          background: "linear-gradient(135deg, #F5C842, #d4a832)",
+          background: "linear-gradient(135deg, #F3443F, #c23a35)",
           color: "#0e0f11",
         }}
         aria-label="Perfil"
@@ -41,7 +41,7 @@ export function ElevationDivider() {
       <polyline
         points="0,20 30,20 45,6 60,20 90,20 110,14 130,20 160,20 180,4 200,20 230,20 250,10 270,20 300,20 320,8 340,20 400,20"
         fill="none"
-        stroke="#F5C842"
+        stroke="#F3443F"
         strokeWidth="1.5"
       />
     </svg>

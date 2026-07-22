@@ -55,7 +55,7 @@ export function EventDetail({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState(event.image_url);
 
-  const accent = event.type === "equipo" ? "#80C6FF" : "#F5C842";
+  const accent = event.type === "equipo" ? "#80C6FF" : "#F3443F";
 
   function formatLongDate(dateStr: string) {
     const parts = dateStr.split("-").map(Number);
@@ -219,7 +219,7 @@ export function EventDetail({
               <button
                 onClick={() => setType("comunidad")}
                 style={{
-                  background: type === "comunidad" ? "#F5C842" : "transparent",
+                  background: type === "comunidad" ? "#F3443F" : "transparent",
                   color: type === "comunidad" ? "#0e0f11" : "#9BA3AC",
                 }}
                 className="flex-1 py-2 text-xs font-[family-name:var(--font-display)] uppercase tracking-wide cursor-pointer"

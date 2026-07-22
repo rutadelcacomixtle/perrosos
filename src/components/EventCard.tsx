@@ -49,8 +49,8 @@ export function TipoBadge({ type }: { type: Event["type"] }) {
       className="font-[family-name:var(--font-mono)] uppercase inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm shrink-0"
       style={{
         fontSize: 9,
-        color: isEquipo ? "#80C6FF" : "#F5C842",
-        border: `1px solid ${isEquipo ? "#80C6FF" : "#F5C842"}`,
+        color: isEquipo ? "#80C6FF" : "#F3443F",
+        border: `1px solid ${isEquipo ? "#80C6FF" : "#F3443F"}`,
       }}
     >
       {isEquipo && <Users size={9} />}

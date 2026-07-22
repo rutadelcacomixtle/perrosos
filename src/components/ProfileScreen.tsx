@@ -36,7 +36,7 @@ export function ProfileScreen({ user, onBack }: { user: User; onBack: () => void
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold mb-4"
             style={{
-              background: "linear-gradient(135deg, #F5C842, #d4a832)",
+              background: "linear-gradient(135deg, #F3443F, #c23a35)",
               color: "#0e0f11",
             }}
           >

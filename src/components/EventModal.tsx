@@ -215,7 +215,7 @@ export function EventModal({
         <p
           className="font-[family-name:var(--font-display)] uppercase text-sm mb-3"
           style={{
-            color: form.type === "equipo" ? "#80C6FF" : "#F5C842",
+            color: form.type === "equipo" ? "#80C6FF" : "#F3443F",
           }}
         >
           Agregar evento
@@ -229,7 +229,7 @@ export function EventModal({
             onClick={() => updateForm("type", "comunidad")}
             style={{
               background:
-                form.type === "comunidad" ? "#F5C842" : "transparent",
+                form.type === "comunidad" ? "#F3443F" : "transparent",
               color:
                 form.type === "comunidad" ? "#0e0f11" : "#9BA3AC",
             }}
@@ -413,7 +413,7 @@ export function EventModal({
               background: form.title.trim()
                 ? form.type === "equipo"
                   ? "#80C6FF"
-                  : "#F5C842"
+                  : "#F3443F"
                 : "#2A2D31",
               color: "#0e0f11",
             }}

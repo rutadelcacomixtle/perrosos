@@ -102,7 +102,7 @@ export function Calendar({ events, onDayClick }: CalendarProps) {
               {dayEvents.length > 1 && (
                 <span
                   className="absolute bottom-0.5 right-1 font-[family-name:var(--font-mono)]"
-                  style={{ fontSize: 9, color: "#F5C842" }}
+                  style={{ fontSize: 9, color: "#F3443F" }}
                 >
                   +{dayEvents.length - 1}
                 </span>

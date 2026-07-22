@@ -64,7 +64,7 @@ export function AuthScreen() {
         {/* Icon */}
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-          style={{ background: "#F5C842" }}
+          style={{ background: "#F3443F" }}
         >
           <PawPrint size={32} color="#0e0f11" strokeWidth={2.5} />
         </div>
@@ -109,7 +109,7 @@ export function AuthScreen() {
                   border: "2px solid #34383D",
                   color: "#EDEFF2",
                 }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#F5C842")}
+                onFocus={(e) => (e.currentTarget.style.borderColor = "#F3443F")}
                 onBlur={(e) => (e.currentTarget.style.borderColor = "#34383D")}
               />
             </div>
@@ -134,7 +134,7 @@ export function AuthScreen() {
                 border: "2px solid #34383D",
                 color: "#EDEFF2",
               }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "#F5C842")}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "#F3443F")}
               onBlur={(e) => (e.currentTarget.style.borderColor = "#34383D")}
             />
           </div>
@@ -161,7 +161,7 @@ export function AuthScreen() {
                   color: "#EDEFF2",
                 }}
                 onFocus={(e) =>
-                  (e.currentTarget.style.borderColor = "#F5C842")
+                  (e.currentTarget.style.borderColor = "#F3443F")
                 }
                 onBlur={(e) =>
                   (e.currentTarget.style.borderColor = "#34383D")
@@ -208,7 +208,7 @@ export function AuthScreen() {
             disabled={loading}
             className="group w-full py-3.5 px-4 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer font-[family-name:var(--font-display)] uppercase tracking-wide"
             style={{
-              background: "linear-gradient(135deg, #F5C842, #d4a832)",
+              background: "linear-gradient(135deg, #F3443F, #c23a35)",
               color: "#0e0f11",
             }}
           >
