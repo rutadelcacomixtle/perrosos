@@ -63,7 +63,7 @@ export function AuthScreen() {
       >
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <img src="/perrosos-logo.svg" alt="PerroSOS MTB" className="h-16 w-16" />
+          <img src="/perrosos-logo.svg" alt="PerroSOS MTB" className="h-16 w-16" style={{ filter: "brightness(0) invert(1)" }} />
         </div>
 
         {/* Title */}
