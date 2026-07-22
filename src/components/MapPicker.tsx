@@ -39,6 +39,48 @@ function parseCoords(input: string): { lat: number; lng: number } | null {
   return null;
 }
 
+function parseGoogleMapsUrl(input: string): { lat: number; lng: number } | null {
+  const url = input.trim();
+  if (!url.includes("google.com/maps") && !url.includes("goo.gl/maps") && !url.includes("maps.app.goo.gl")) {
+    return null;
+  }
+
+  // Try direct URL patterns
+  // /maps?q=lat,lng
+  const qMatch = url.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+  if (qMatch && qMatch[1] && qMatch[2]) {
+    return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
+  }
+
+  // /maps/@lat,lng,zoomz or /maps/place/.../@lat,lng,zoomz or /maps/dir/.../@lat,lng,zoomz
+  const atMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+  if (atMatch && atMatch[1] && atMatch[2]) {
+    return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
+  }
+
+  // /maps/dir/lat,lng/lat,lng
+  const dirMatch = url.match(/\/maps\/dir\/(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+  if (dirMatch && dirMatch[1] && dirMatch[2]) {
+    return { lat: parseFloat(dirMatch[1]), lng: parseFloat(dirMatch[2]) };
+  }
+
+  return null;
+}
+
+async function resolveGoogleMapsUrl(input: string): Promise<{ lat: number; lng: number } | null> {
+  const url = input.trim();
+  const isShortened = url.includes("goo.gl/maps") || url.includes("maps.app.goo.gl");
+  if (!isShortened) return parseGoogleMapsUrl(url);
+
+  try {
+    const res = await fetch(url, { redirect: "follow" });
+    const finalUrl = res.url;
+    return parseGoogleMapsUrl(finalUrl);
+  } catch {
+    return null;
+  }
+}
+
 interface MapPickerProps {
   place: string;
   placeLat: number | null;
@@ -247,6 +289,22 @@ export function MapPicker({
       return;
     }
 
+    // Try Google Maps URL (direct or shortened)
+    const isMapsUrl = value.includes("google.com/maps") || value.includes("goo.gl/maps") || value.includes("maps.app.goo.gl");
+    if (isMapsUrl) {
+      setSearching(true);
+      resolveGoogleMapsUrl(value).then((coords) => {
+        if (coords) {
+          onPlaceChangeRef.current("Ubicación de Google Maps", coords.lat, coords.lng);
+          setSearchValue("Ubicación de Google Maps");
+          panMapTo(coords.lat, coords.lng);
+        }
+        setSuggestions([]);
+        setSearching(false);
+      });
+      return;
+    }
+
     onPlaceChangeRef.current(value, placeLat, placeLng);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     if (value.trim().length < 3) {
@@ -300,7 +358,7 @@ export function MapPicker({
           <input
             value={searchValue}
             onChange={(ev) => handleSearchInput(ev.target.value)}
-            placeholder="Buscar, pegar coordenadas (19.04, -98.20)"
+            placeholder="Buscar, coordenadas, enlace de Google Maps"
             style={{
               background: "#0e0f11",
               border: "1px solid #34383D",
@@ -376,7 +434,7 @@ export function MapPicker({
                 <input
                   value={searchValue}
                   onChange={(ev) => handleSearchInput(ev.target.value)}
-                  placeholder="Buscar, pegar coordenadas"
+                  placeholder="Buscar, coordenadas, enlace de Google Maps"
                   style={{
                     background: "#0e0f11",
                     border: "1px solid #34383D",
