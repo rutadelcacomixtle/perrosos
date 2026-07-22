@@ -134,6 +134,10 @@ export default function App() {
       );
     } else {
       const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email || "";
+      await supabase.from("profiles").upsert(
+        { id: user.id, display_name: name },
+        { onConflict: "id" }
+      );
       await supabase.from("event_attendees").insert({
         event_id: e.id,
         user_id: user.id,

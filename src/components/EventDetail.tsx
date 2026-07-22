@@ -74,6 +74,10 @@ export function EventDetail({
       setLocalAttendees((prev) => prev.filter((a) => a.user_id !== user.id));
     } else {
       const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email || "";
+      await supabase.from("profiles").upsert(
+        { id: user.id, display_name: name },
+        { onConflict: "id" }
+      );
       await supabase.from("event_attendees").insert({
         event_id: event.id,
         user_id: user.id,
@@ -495,18 +499,6 @@ export function EventDetail({
                 </div>
               )}
 
-              {localAttendees.length > 0 && (
-                <div
-                  className="flex flex-wrap items-center gap-2 pt-2"
-                  style={{ borderTop: "1px solid #24272B" }}
-                >
-                  <Users size={12} style={{ color: accent }} />
-                  <span className="text-xs" style={{ color: "#9BA3AC" }}>
-                    {localAttendees.map((a) => a.display_name).join(", ")}
-                  </span>
-                </div>
-              )}
-
               {event.source_url && (
                 <a
                   href={event.source_url}
@@ -531,6 +523,38 @@ export function EventDetail({
             >
               {isAttending ? <><Check size={16} /> Voy a asistir</> : "Asistiré"}
             </button>
+
+            {localAttendees.length > 0 && (
+              <div
+                className="rounded-xl p-4"
+                style={{ background: "#1D1F23", border: "1px solid #24272B" }}
+              >
+                <p className="text-xs font-[family-name:var(--font-display)] uppercase tracking-wide mb-2" style={{ color: "#9BA3AC" }}>
+                  <Users size={12} className="inline mr-1" style={{ color: accent }} />
+                  Asisten ({localAttendees.length})
+                </p>
+                <div className="flex flex-col gap-1.5">
+                  {localAttendees.map((a) => (
+                    <div key={a.user_id} className="flex items-center gap-2">
+                      <div
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+                        style={{ background: accent, color: "#0e0f11" }}
+                      >
+                        {(a.display_name || "?").charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm" style={{ color: "#EDEFF2" }}>
+                        {a.display_name}
+                      </span>
+                      {a.user_id === user.id && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: accent, color: "#0e0f11" }}>
+                          Tú
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
