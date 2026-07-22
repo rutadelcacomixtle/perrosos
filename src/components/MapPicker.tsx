@@ -247,7 +247,7 @@ export function MapPicker({
       return;
     }
 
-    onPlaceChangeRef.current(value, null, null);
+    onPlaceChangeRef.current(value, placeLat, placeLng);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     if (value.trim().length < 3) {
       setSuggestions([]);
