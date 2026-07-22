@@ -7,7 +7,7 @@ export function Header({ user, onProfileClick }: { user: User; onProfileClick: (
   return (
     <div className="flex items-center justify-between mb-1">
       <div className="flex items-center gap-2 sm:gap-3">
-        <img src="/perrosos-logo.svg" alt="PerroSOS MTB" className="h-12 w-12 sm:h-[67px] sm:w-[67px]" />
+        <img src="/perrosos-logo.svg" alt="PerroSOS MTB" className="h-[62px] w-[62px] sm:h-[87px] sm:w-[87px]" />
         <div>
           <h1
             className="text-2xl sm:text-4xl font-extrabold leading-none font-[family-name:var(--font-display)]"
