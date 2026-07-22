@@ -461,6 +461,9 @@ export function EventDetail({
                 <div className="flex items-start gap-2" style={{ color: "#9BA3AC" }}>
                   <MapPin size={14} className="mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">
+                    {event.type === "equipo" && (
+                      <p className="text-xs mb-0.5" style={{ color: "#6B747C" }}>Punto de reunión</p>
+                    )}
                     <p className="text-sm">{event.place}</p>
                     {event.place_lat != null && event.place_lng != null && (
                       <a

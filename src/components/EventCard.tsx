@@ -4,7 +4,7 @@ import type { Event } from "../types";
 
 const ROT = [-5, 4, -3, 6, -6, 3, -4, 5];
 
-const PENTAGON_POINTS = "50,2 97.5,38 79,95 21,95 2.5,38";
+const PENTAGON_POINTS = "50,-3 102,32 82,95 18,95 -2,32";
 
 export function Sticker({
   event,
@@ -49,20 +49,10 @@ export function Sticker({
           width: maxW,
           height: maxH,
           transform: `rotate(${rot}deg)`,
-          boxShadow: "0 3px 8px rgba(0,0,0,0.45)",
           position: "relative",
         }}
         className="shrink-0"
       >
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          background: "linear-gradient(135deg, #2A2D31, #3D434A)",
-          clipPath: "polygon(50% 2%, 97.5% 38%, 79% 95%, 21% 95%, 2.5% 38%)",
-          position: "relative",
-        }}
-      />
         <svg
           viewBox="0 0 100 100"
           style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
@@ -70,8 +60,8 @@ export function Sticker({
           <polygon
             points={PENTAGON_POINTS}
             fill="none"
-            stroke="#80C6FF"
-            strokeWidth="3"
+            stroke="#EDEFF2"
+            strokeWidth="1.5"
             strokeLinejoin="round"
           />
         </svg>
@@ -80,10 +70,10 @@ export function Sticker({
           alt="Equipo"
           style={{
             position: "absolute",
-            top: "18%",
-            left: "18%",
-            width: "64%",
-            height: "64%",
+            top: "15%",
+            left: "15%",
+            width: "70%",
+            height: "70%",
             opacity: 0.95,
           }}
         />
