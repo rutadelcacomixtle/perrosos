@@ -264,11 +264,14 @@ export default function App() {
                           <Gauge size={10} /> {e.difficulty}
                         </span>
                       )}
-                      {e.attendees.length > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Users size={10} /> {e.attendees.length} confirmados
-                        </span>
-                      )}
+                    </div>
+                  )}
+                  {e.attendees.length > 0 && (
+                    <div
+                      className="flex items-center gap-1.5 mt-1 font-[family-name:var(--font-mono)]"
+                      style={{ fontSize: 10.5, color: e.type === "equipo" ? "#80C6FF" : "#F3443F" }}
+                    >
+                      <Users size={10} /> {e.attendees.length} confirmados
                     </div>
                   )}
                 </div>
