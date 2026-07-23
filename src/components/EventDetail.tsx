@@ -309,17 +309,19 @@ export function EventDetail({
               </span>
             </div>
 
-            <input
-              value={sourceUrl}
-              onChange={(ev) => setSourceUrl(ev.target.value)}
-              placeholder="Enlace al post original"
-              style={{
-                background: "#0e0f11",
-                border: "1px solid #34383D",
-                color: "#EDEFF2",
-              }}
-              className="rounded-md px-3 py-2 text-sm outline-none"
-            />
+            {type === "comunidad" && (
+              <input
+                value={sourceUrl}
+                onChange={(ev) => setSourceUrl(ev.target.value)}
+                placeholder="Enlace al post original"
+                style={{
+                  background: "#0e0f11",
+                  border: "1px solid #34383D",
+                  color: "#EDEFF2",
+                }}
+                className="rounded-md px-3 py-2 text-sm outline-none"
+              />
+            )}
 
             <MapPicker
               place={place}
@@ -385,26 +387,30 @@ export function EventDetail({
               </div>
             )}
 
-            <button
-              onClick={() => fileRef.current?.click()}
-              style={{
-                background: "#1D1F23",
-                border: "1px dashed #454B52",
-              }}
-              className="rounded-md px-3 py-3 text-sm flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <ImageIcon size={16} color="#9BA3AC" />
-              <span style={{ color: "#9BA3AC" }}>
-                {imageUrl ? "Cambiar imagen" : "Subir imagen"}
-              </span>
-            </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImage}
-              className="hidden"
-            />
+            {type === "comunidad" && (
+              <>
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  style={{
+                    background: "#1D1F23",
+                    border: "1px dashed #454B52",
+                  }}
+                  className="rounded-md px-3 py-3 text-sm flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <ImageIcon size={16} color="#9BA3AC" />
+                  <span style={{ color: "#9BA3AC" }}>
+                    {imageUrl ? "Cambiar imagen" : "Subir imagen"}
+                  </span>
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImage}
+                  className="hidden"
+                />
+              </>
+            )}
 
             {error && (
               <p className="text-xs px-3 py-2 rounded-lg" style={{ background: "#2a1a1a", color: "#ff6b6b" }}>
