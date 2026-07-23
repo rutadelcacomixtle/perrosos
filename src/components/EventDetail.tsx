@@ -15,7 +15,6 @@ import {
 import { supabase } from "../lib/supabase";
 import { uploadEventImage } from "../lib/upload";
 import { MapPicker } from "./MapPicker";
-import { AttendeeList } from "./AttendeeList";
 import { TipoBadge } from "./EventCard";
 import type { EventWithAttendees } from "../types";
 import type { User } from "@supabase/supabase-js";
@@ -53,9 +52,6 @@ export function EventDetail({
   const [elevation, setElevation] = useState(event.elevation || "");
   const [difficulty, setDifficulty] = useState(event.difficulty || "Facil");
   const [sourceUrl, setSourceUrl] = useState(event.source_url || "");
-  const [attendees, setAttendees] = useState(
-    event.attendees.map((a) => a.display_name || "").filter(Boolean)
-  );
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState(event.image_url);
   const [localAttendees, setLocalAttendees] = useState(event.attendees);
@@ -156,26 +152,6 @@ export function EventDetail({
           .from("eventos")
           .update({ image_url: url })
           .eq("id", event.id);
-      }
-    }
-
-    // Sync attendees for equipo events
-    if (type === "equipo") {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id ?? null;
-
-      await supabase
-        .from("event_attendees")
-        .delete()
-        .eq("event_id", event.id);
-
-      if (attendees.length > 0 && userId) {
-        const rows = attendees.map((name) => ({
-          event_id: event.id,
-          user_id: userId,
-          display_name: name,
-        }));
-        await supabase.from("event_attendees").insert(rows);
       }
     }
 
@@ -383,7 +359,6 @@ export function EventDetail({
                     </button>
                   ))}
                 </div>
-                <AttendeeList attendees={attendees} onChange={setAttendees} />
               </div>
             )}
 
