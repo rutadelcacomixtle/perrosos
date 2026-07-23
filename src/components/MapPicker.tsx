@@ -234,6 +234,7 @@ export function MapPicker({
 
     import("leaflet").then(async (L) => {
       if (cancelled || !fullMapRef.current) return;
+      await import("leaflet-rotate");
 
       const lat = placeLat ?? DEFAULT_LAT;
       const lng = placeLng ?? DEFAULT_LNG;
@@ -245,7 +246,9 @@ export function MapPicker({
         doubleClickZoom: true,
         scrollWheelZoom: true,
         maxZoom: 19,
-      }).setView([lat, lng], placeLat ? 17 : 14);
+        rotation: true,
+        touchRotate: true,
+      } as any).setView([lat, lng], placeLat ? 17 : 14);
 
       getTileLayer(L).addTo(map);
 
