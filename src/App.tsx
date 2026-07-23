@@ -80,6 +80,7 @@ export default function App() {
     const x = e.touches[0]!.clientX;
     const w = window.innerWidth;
     if (x >= w - 30) {
+      e.preventDefault();
       touchStartXRef.current = x;
       touchStartYRef.current = e.touches[0]!.clientY;
     } else {
@@ -92,7 +93,6 @@ export default function App() {
     const dx = e.changedTouches[0]!.clientX - touchStartXRef.current;
     const dy = Math.abs(e.changedTouches[0]!.clientY - touchStartYRef.current);
     if (dx < -60 && dy < 100) {
-      e.preventDefault();
       if (isHome) {
         handleExitAttempt();
       } else {
@@ -103,7 +103,7 @@ export default function App() {
   }, [isHome, handleBack, handleExitAttempt]);
 
   useEffect(() => {
-    document.addEventListener("touchstart", onRootTouchStart, { passive: true });
+    document.addEventListener("touchstart", onRootTouchStart, { passive: false });
     document.addEventListener("touchend", onRootTouchEnd, { passive: false });
     return () => {
       document.removeEventListener("touchstart", onRootTouchStart);
