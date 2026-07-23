@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { EventWithAttendees } from "../types";
 import { Sticker } from "./EventCard";
@@ -58,6 +58,20 @@ export function Calendar({ events, onDayClick }: CalendarProps) {
     viewM === today.getMonth() &&
     viewY === today.getFullYear();
 
+  const touchStartX = useRef(0);
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0]!.clientX;
+  }, []);
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    const dx = e.changedTouches[0]!.clientX - touchStartX.current;
+    if (Math.abs(dx) > 50) {
+      if (dx < 0) nextMonth();
+      else prevMonth();
+    }
+  }, [viewY, viewM]);
+
   return (
     <>
       <div className="flex items-center justify-between mt-3 mb-4">
@@ -92,7 +106,11 @@ export function Calendar({ events, onDayClick }: CalendarProps) {
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div
+        className="grid grid-cols-7 gap-1"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         {grid.map((day, idx) => {
           if (day === null) return <div key={idx} />;
           const key = toKey(viewY, viewM, day);
