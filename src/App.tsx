@@ -76,7 +76,7 @@ export default function App() {
     }, 2500);
   }, []);
 
-  const onRootTouchStart = useCallback((e: React.TouchEvent) => {
+  const onRootTouchStart = useCallback((e: TouchEvent) => {
     const x = e.touches[0]!.clientX;
     const w = window.innerWidth;
     if (x >= w - 30) {
@@ -87,11 +87,12 @@ export default function App() {
     }
   }, []);
 
-  const onRootTouchEnd = useCallback((e: React.TouchEvent) => {
+  const onRootTouchEnd = useCallback((e: TouchEvent) => {
     if (touchStartXRef.current < 0) return;
     const dx = e.changedTouches[0]!.clientX - touchStartXRef.current;
     const dy = Math.abs(e.changedTouches[0]!.clientY - touchStartYRef.current);
     if (dx < -60 && dy < 100) {
+      e.preventDefault();
       if (isHome) {
         handleExitAttempt();
       } else {
@@ -100,6 +101,15 @@ export default function App() {
     }
     touchStartXRef.current = -1;
   }, [isHome, handleBack, handleExitAttempt]);
+
+  useEffect(() => {
+    document.addEventListener("touchstart", onRootTouchStart, { passive: true });
+    document.addEventListener("touchend", onRootTouchEnd, { passive: false });
+    return () => {
+      document.removeEventListener("touchstart", onRootTouchStart);
+      document.removeEventListener("touchend", onRootTouchEnd);
+    };
+  }, [onRootTouchStart, onRootTouchEnd]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -294,8 +304,6 @@ export default function App() {
       <div
         style={{ background: "#0e0f11", color: "#EDEFF2", minHeight: "100vh" }}
         className="w-full flex justify-center"
-        onTouchStart={onRootTouchStart}
-        onTouchEnd={onRootTouchEnd}
       >
         <ProfileScreen user={user} onBack={() => setShowProfile(false)} />
       </div>
@@ -307,8 +315,6 @@ export default function App() {
       <div
         style={{ background: "#0e0f11", color: "#EDEFF2", minHeight: "100vh" }}
         className="w-full flex justify-center"
-        onTouchStart={onRootTouchStart}
-        onTouchEnd={onRootTouchEnd}
       >
         <EventDetail
           event={selectedEvent}
@@ -330,8 +336,6 @@ export default function App() {
     <div
       style={{ background: "#0e0f11", color: "#EDEFF2", minHeight: "100vh" }}
       className="w-full flex justify-center"
-      onTouchStart={onRootTouchStart}
-      onTouchEnd={onRootTouchEnd}
     >
       <div className="w-full max-w-md px-4 pt-6 pb-16 font-[family-name:var(--font-body)]">
         <Header user={user} onProfileClick={() => setShowProfile(true)} />
