@@ -246,7 +246,7 @@ export function MapPicker({
         doubleClickZoom: true,
         scrollWheelZoom: true,
         maxZoom: 19,
-        rotation: true,
+        rotate: true,
         touchRotate: true,
       } as any).setView([lat, lng], placeLat ? 17 : 14);
 
