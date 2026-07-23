@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Clock, MapPin, Users, TrendingUp, Gauge, ChevronDown, ChevronUp, Check } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
@@ -44,72 +44,49 @@ export default function App() {
   const [showExitToast, setShowExitToast] = useState(false);
   const backSwipeCountRef = useRef(0);
   const backSwipeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const touchStartXRef = useRef(0);
-  const touchStartYRef = useRef(0);
-
-  const isHome = !showProfile && !selectedEvent && !modalDate;
-
-  const handleBack = useCallback(() => {
-    if (selectedEvent) {
-      setSelectedEvent(null);
-    } else if (showProfile) {
-      setShowProfile(false);
-    } else if (modalDate) {
-      setModalDate(null);
-    }
-  }, [selectedEvent, showProfile, modalDate]);
-
-  const handleExitAttempt = useCallback(() => {
-    backSwipeCountRef.current += 1;
-    if (backSwipeCountRef.current >= 2) {
-      if (backSwipeTimerRef.current) clearTimeout(backSwipeTimerRef.current);
-      window.close();
-      setShowExitToast(false);
-      backSwipeCountRef.current = 0;
-      return;
-    }
-    setShowExitToast(true);
-    if (backSwipeTimerRef.current) clearTimeout(backSwipeTimerRef.current);
-    backSwipeTimerRef.current = setTimeout(() => {
-      backSwipeCountRef.current = 0;
-      setShowExitToast(false);
-    }, 2500);
-  }, []);
-
-  const onRootTouchStart = useCallback((e: TouchEvent) => {
-    const x = e.touches[0]!.clientX;
-    const w = window.innerWidth;
-    if (x >= w - 30) {
-      e.preventDefault();
-      touchStartXRef.current = x;
-      touchStartYRef.current = e.touches[0]!.clientY;
-    } else {
-      touchStartXRef.current = -1;
-    }
-  }, []);
-
-  const onRootTouchEnd = useCallback((e: TouchEvent) => {
-    if (touchStartXRef.current < 0) return;
-    const dx = e.changedTouches[0]!.clientX - touchStartXRef.current;
-    const dy = Math.abs(e.changedTouches[0]!.clientY - touchStartYRef.current);
-    if (dx < -60 && dy < 100) {
-      if (isHome) {
-        handleExitAttempt();
-      } else {
-        handleBack();
-      }
-    }
-    touchStartXRef.current = -1;
-  }, [isHome, handleBack, handleExitAttempt]);
+  const stateRef = useRef({ selectedEvent, showProfile, modalDate });
+  stateRef.current = { selectedEvent, showProfile, modalDate };
 
   useEffect(() => {
-    document.addEventListener("touchstart", onRootTouchStart, { passive: false });
-    document.addEventListener("touchend", onRootTouchEnd, { passive: false });
-    return () => {
-      document.removeEventListener("touchstart", onRootTouchStart);
-      document.removeEventListener("touchend", onRootTouchEnd);
+    if (!user) return;
+
+    history.pushState({ screen: "home" }, "");
+
+    const onPopState = () => {
+      const { selectedEvent: sel, showProfile: prof, modalDate: mod } = stateRef.current;
+
+      if (sel) {
+        history.pushState({ screen: "home" }, "");
+        setSelectedEvent(null);
+      } else if (prof) {
+        history.pushState({ screen: "home" }, "");
+        setShowProfile(false);
+      } else if (mod) {
+        history.pushState({ screen: "home" }, "");
+        setModalDate(null);
+      } else {
+        backSwipeCountRef.current += 1;
+        if (backSwipeCountRef.current >= 2) {
+          if (backSwipeTimerRef.current) clearTimeout(backSwipeTimerRef.current);
+          backSwipeCountRef.current = 0;
+          setShowExitToast(false);
+          window.close();
+          return;
+        }
+        history.pushState({ screen: "home" }, "");
+        setShowExitToast(true);
+        if (backSwipeTimerRef.current) clearTimeout(backSwipeTimerRef.current);
+        backSwipeTimerRef.current = setTimeout(() => {
+          backSwipeCountRef.current = 0;
+          setShowExitToast(false);
+        }, 2500);
+      }
     };
-  }, [onRootTouchStart, onRootTouchEnd]);
+
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
