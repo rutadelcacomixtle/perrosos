@@ -22,6 +22,21 @@ function parseDMS(input: string): { lat: number; lng: number } | null {
   return { lat, lng };
 }
 
+const STADIA_KEY = import.meta.env.VITE_STADIA_API_KEY as string | undefined;
+
+function getTileLayer(L: typeof import("leaflet")) {
+  if (STADIA_KEY) {
+    return L.tileLayer(
+      `https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=${STADIA_KEY}`,
+      { attribution: "&copy; OpenStreetMap, &copy; Stadia Maps", maxZoom: 20 }
+    );
+  }
+  return L.tileLayer(
+    "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    { attribution: "&copy; OpenStreetMap, &copy; CARTO", maxZoom: 19, subdomains: "abcd" }
+  );
+}
+
 function parseCoords(input: string): { lat: number; lng: number } | null {
   const dms = parseDMS(input);
   if (dms) return dms;
@@ -180,14 +195,7 @@ export function MapPicker({
         maxZoom: 19,
       }).setView([lat, lng], placeLat ? 16 : 13);
 
-      L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        {
-          attribution: "&copy; OpenStreetMap, &copy; CARTO",
-          maxZoom: 19,
-          subdomains: "abcd",
-        }
-      ).addTo(map);
+      getTileLayer(L).addTo(map);
 
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
@@ -239,14 +247,7 @@ export function MapPicker({
         maxZoom: 19,
       }).setView([lat, lng], placeLat ? 17 : 14);
 
-      L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        {
-          attribution: "&copy; OpenStreetMap, &copy; CARTO",
-          maxZoom: 19,
-          subdomains: "abcd",
-        }
-      ).addTo(map);
+      getTileLayer(L).addTo(map);
 
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
