@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Clock, MapPin, Users, TrendingUp, Gauge, ChevronDown, ChevronUp, Check } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
@@ -41,6 +41,65 @@ export default function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventWithAttendees | null>(null);
+  const [showExitToast, setShowExitToast] = useState(false);
+  const backSwipeCountRef = useRef(0);
+  const backSwipeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartXRef = useRef(0);
+  const touchStartYRef = useRef(0);
+
+  const isHome = !showProfile && !selectedEvent && !modalDate;
+
+  const handleBack = useCallback(() => {
+    if (selectedEvent) {
+      setSelectedEvent(null);
+    } else if (showProfile) {
+      setShowProfile(false);
+    } else if (modalDate) {
+      setModalDate(null);
+    }
+  }, [selectedEvent, showProfile, modalDate]);
+
+  const handleExitAttempt = useCallback(() => {
+    backSwipeCountRef.current += 1;
+    if (backSwipeCountRef.current >= 2) {
+      if (backSwipeTimerRef.current) clearTimeout(backSwipeTimerRef.current);
+      window.close();
+      setShowExitToast(false);
+      backSwipeCountRef.current = 0;
+      return;
+    }
+    setShowExitToast(true);
+    if (backSwipeTimerRef.current) clearTimeout(backSwipeTimerRef.current);
+    backSwipeTimerRef.current = setTimeout(() => {
+      backSwipeCountRef.current = 0;
+      setShowExitToast(false);
+    }, 2500);
+  }, []);
+
+  const onRootTouchStart = useCallback((e: React.TouchEvent) => {
+    const x = e.touches[0]!.clientX;
+    const w = window.innerWidth;
+    if (x >= w - 30) {
+      touchStartXRef.current = x;
+      touchStartYRef.current = e.touches[0]!.clientY;
+    } else {
+      touchStartXRef.current = -1;
+    }
+  }, []);
+
+  const onRootTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartXRef.current < 0) return;
+    const dx = e.changedTouches[0]!.clientX - touchStartXRef.current;
+    const dy = Math.abs(e.changedTouches[0]!.clientY - touchStartYRef.current);
+    if (dx < -60 && dy < 100) {
+      if (isHome) {
+        handleExitAttempt();
+      } else {
+        handleBack();
+      }
+    }
+    touchStartXRef.current = -1;
+  }, [isHome, handleBack, handleExitAttempt]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -231,23 +290,39 @@ export default function App() {
   }
 
   if (showProfile) {
-    return <ProfileScreen user={user} onBack={() => setShowProfile(false)} />;
+    return (
+      <div
+        style={{ background: "#0e0f11", color: "#EDEFF2", minHeight: "100vh" }}
+        className="w-full flex justify-center"
+        onTouchStart={onRootTouchStart}
+        onTouchEnd={onRootTouchEnd}
+      >
+        <ProfileScreen user={user} onBack={() => setShowProfile(false)} />
+      </div>
+    );
   }
 
   if (selectedEvent) {
     return (
-      <EventDetail
-        event={selectedEvent}
-        user={user}
-        onClose={() => setSelectedEvent(null)}
-        onSaved={() => {
-          setSelectedEvent(null);
-        }}
-        onDeleted={() => {
-          setSelectedEvent(null);
-          setEvents((prev) => prev.filter((e) => e.id !== selectedEvent.id));
-        }}
-      />
+      <div
+        style={{ background: "#0e0f11", color: "#EDEFF2", minHeight: "100vh" }}
+        className="w-full flex justify-center"
+        onTouchStart={onRootTouchStart}
+        onTouchEnd={onRootTouchEnd}
+      >
+        <EventDetail
+          event={selectedEvent}
+          user={user}
+          onClose={() => setSelectedEvent(null)}
+          onSaved={() => {
+            setSelectedEvent(null);
+          }}
+          onDeleted={() => {
+            setSelectedEvent(null);
+            setEvents((prev) => prev.filter((e) => e.id !== selectedEvent.id));
+          }}
+        />
+      </div>
     );
   }
 
@@ -255,6 +330,8 @@ export default function App() {
     <div
       style={{ background: "#0e0f11", color: "#EDEFF2", minHeight: "100vh" }}
       className="w-full flex justify-center"
+      onTouchStart={onRootTouchStart}
+      onTouchEnd={onRootTouchEnd}
     >
       <div className="w-full max-w-md px-4 pt-6 pb-16 font-[family-name:var(--font-body)]">
         <Header user={user} onProfileClick={() => setShowProfile(true)} />
@@ -421,6 +498,15 @@ export default function App() {
             /* re-fetch or optimistic update already handled */
           }}
         />
+      )}
+
+      {showExitToast && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full text-sm font-[family-name:var(--font-display)]"
+          style={{ background: "#1D1F23", border: "1px solid #34383D", color: "#EDEFF2" }}
+        >
+          Desliza de nuevo para salir
+        </div>
       )}
     </div>
   );
