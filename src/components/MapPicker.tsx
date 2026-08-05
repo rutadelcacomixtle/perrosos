@@ -87,6 +87,10 @@ async function resolveGoogleMapsUrl(input: string): Promise<{ lat: number; lng: 
   const isShortened = url.includes("goo.gl/maps") || url.includes("maps.app.goo.gl");
   if (!isShortened) return parseGoogleMapsUrl(url);
 
+  // Los acortadores de Google no mandan cabeceras CORS, asi que este fetch casi
+  // siempre lanza excepcion y devolvemos null; quien llama avisa al usuario que
+  // pegue el enlace largo. Resolverlos de verdad requiere un proxy propio
+  // (una Edge Function de Supabase) — pendiente.
   try {
     const res = await fetch(url, { redirect: "follow" });
     const finalUrl = res.url;
@@ -116,6 +120,7 @@ export function MapPicker({
   const compactMarkerRef = useRef<L.Marker | null>(null);
   const fullMarkerRef = useRef<L.Marker | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const reverseTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   const [suggestions, setSuggestions] = useState<
     Array<{ place_id: number; display_name: string; lat: string; lon: string }>
@@ -123,6 +128,15 @@ export function MapPicker({
   const [searching, setSearching] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [searchValue, setSearchValue] = useState(place);
+  const [linkError, setLinkError] = useState<string | null>(null);
+
+  // Nominatim permite ~1 req/s; sin esto quedarian timers colgados al desmontar.
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      if (reverseTimerRef.current) clearTimeout(reverseTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     setSearchValue(place);
@@ -137,20 +151,27 @@ export function MapPicker({
     onPlaceChangeRef.current(placeRef.current, lat, lng);
   }, []);
 
-  const reverseGeocodeFullScreen = useCallback(async (lat: number, lng: number) => {
+  const reverseGeocodeFullScreen = useCallback((lat: number, lng: number) => {
+    // Las coordenadas se aplican de inmediato (es local y gratis); el nombre del
+    // lugar se pide a Nominatim con debounce, porque "moveend" dispara en cada
+    // arrastre del mapa y sin esto se generaban decenas de requests por minuto,
+    // muy por encima del limite de 1 req/s de su politica de uso.
     onPlaceChangeRef.current(placeRef.current, lat, lng);
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=17`
-      );
-      const data = await res.json();
-      if (data?.display_name) {
-        onPlaceChangeRef.current(data.display_name, lat, lng);
-        setSearchValue(data.display_name);
+    if (reverseTimerRef.current) clearTimeout(reverseTimerRef.current);
+    reverseTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=17`
+        );
+        const data = await res.json();
+        if (data?.display_name) {
+          onPlaceChangeRef.current(data.display_name, lat, lng);
+          setSearchValue(data.display_name);
+        }
+      } catch {
+        // sin conexion
       }
-    } catch {
-      // sin conexion
-    }
+    }, 700);
   }, []);
 
   const reverseGeocodeCompactRef = useRef(reverseGeocodeCompact);
@@ -284,6 +305,7 @@ export function MapPicker({
 
   function handleSearchInput(value: string) {
     setSearchValue(value);
+    setLinkError(null);
 
     const coords = parseCoords(value);
     if (coords) {
@@ -302,6 +324,10 @@ export function MapPicker({
           onPlaceChangeRef.current("Ubicación de Google Maps", coords.lat, coords.lng);
           setSearchValue("Ubicación de Google Maps");
           panMapTo(coords.lat, coords.lng);
+        } else {
+          setLinkError(
+            "No se pudieron sacar las coordenadas de ese enlace. Abrelo en Google Maps y pega la direccion completa de la barra (la que incluye @lat,lng)."
+          );
         }
         setSuggestions([]);
         setSearching(false);
@@ -400,6 +426,14 @@ export function MapPicker({
             Buscando...
           </p>
         )}
+        {linkError && (
+          <p
+            className="text-xs mt-1.5 px-2.5 py-1.5 rounded-md"
+            style={{ background: "#2a1a1a", color: "#ff6b6b" }}
+          >
+            {linkError}
+          </p>
+        )}
       </div>
 
       <div
@@ -485,6 +519,14 @@ export function MapPicker({
             {searching && (
               <p className="text-xs mt-1" style={{ color: "#6B747C" }}>
                 Buscando...
+              </p>
+            )}
+            {linkError && (
+              <p
+                className="text-xs mt-2 px-2.5 py-1.5 rounded-md"
+                style={{ background: "#2a1a1a", color: "#ff6b6b" }}
+              >
+                {linkError}
               </p>
             )}
           </div>
