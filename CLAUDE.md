@@ -35,6 +35,7 @@ src/
   lib/supabase.ts       cliente
   lib/upload.ts         compresión y subida de imágenes a Storage
   lib/format.ts         todayKey, formatLongDate, formatTime12
+  lib/poster.ts         dibuja el cartel compartible en un canvas
   types/index.ts        Event, EventAttendee, EventWithAttendees, Profile
   components/
     AuthScreen.tsx      login / registro
@@ -44,6 +45,7 @@ src/
     EventModal.tsx      alta de evento al tocar un día
     EventDetail.tsx     pantalla de detalle + edición + asistencia
     MapPicker.tsx       buscador Nominatim + mapa Leaflet compacto y fullscreen
+    SharePoster.tsx     vista previa del cartel + compartir / descargar
     ProfileScreen.tsx   perfil y cerrar sesión
 supabase/*.sql          migración inicial + parches sueltos (ver abajo)
 ```
@@ -76,6 +78,33 @@ falta.
 - **Iconos**: `lucide-react`.
 - **Fuentes**: Google Fonts por `<link>` en `index.html` — Barlow Condensed (display),
   Work Sans (body), Space Mono (mono/datos).
+
+### Cartel compartible
+Desde el detalle del evento, el botón de compartir abre `SharePoster`, que dibuja un
+cartel con `lib/poster.ts` y lo manda a la hoja nativa de compartir
+(`navigator.share` con archivo), con descarga como respaldo donde no exista.
+
+- **Se dibuja a mano con la API de canvas**, no con `html2canvas` ni
+  `html-to-image`: son ~50 kB de dependencia, soportan CSS a medias, dan resultados
+  distintos entre navegadores y fallan con imágenes cross-origin justo en el caso que
+  importa (Safari en iPhone compartiendo a WhatsApp). No cambiar esto sin una razón
+  fuerte.
+- **Composición**: encabezado con logo y trazo de montañas, imagen enmarcada, panel de
+  datos abajo. La altura del panel se mide primero y el marco de la imagen se queda con
+  lo que sobra, para que los dos formatos se adapten solos.
+- **El marco toma la proporción de la imagen** y se centra. Si fuera fijo, una imagen
+  vertical dentro del formato cuadrado dejaría dos franjas negras enormes a los lados.
+  Nada se recorta nunca.
+- **Formatos**: 9:16 (1080×1920) para historias y estados, y 1:1 (1080×1080). El
+  usuario elige en la vista previa.
+- **Sin imagen** (rodadas de equipo, y cualquier evento sin foto) se dibuja un perfil
+  de elevación con el color de acento en lugar de la imagen.
+- Tres cosas frágiles que ya están resueltas y conviene no romper: hay que esperar
+  `document.fonts.load()` antes de dibujar o el cartel sale en Arial; la imagen se
+  carga con `crossOrigin="anonymous"` o el canvas se contamina y no se puede exportar
+  (Supabase Storage manda `access-control-allow-origin: *`, ya verificado); y el
+  cartel se dibuja **antes** de que el usuario toque "Compartir", porque iOS exige que
+  el gesto siga vivo al llamar a `navigator.share`.
 
 ### Variables de entorno
 `.env` (ignorado por git, ver `.env.example`):
@@ -141,6 +170,10 @@ Sobre acento rojo el texto va **blanco** (`#EDEFF2`); sobre acento azul va **osc
   imagen entre `dd6c9e1` y este cambio; se reactivó a propósito.)
 - El enlace al post original sigue siendo solo de comunidad.
 - La asistencia va ligada a la cuenta del usuario, no a texto libre.
+- El cartel compartible **no lleva enlace ni QR** por ahora: no hay hosting estable y
+  la app pide cuenta, así que un QR llevaría a un muro de login. Se agrega cuando se
+  resuelva si el calendario se ve sin cuenta.
+- Compartir el cartel lo puede hacer cualquiera, no solo quien creó el evento.
 
 ## Problemas conocidos pendientes
 Revisión completa hecha el 2026-08-04; se corrigió todo lo que salió de ella salvo lo

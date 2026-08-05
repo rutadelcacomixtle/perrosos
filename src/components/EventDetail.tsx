@@ -11,7 +11,9 @@ import {
   ExternalLink,
   Save,
   Check,
+  Share2,
 } from "lucide-react";
+import { SharePoster } from "./SharePoster";
 import { supabase } from "../lib/supabase";
 import { uploadEventImage } from "../lib/upload";
 import { formatLongDate, formatTime12 } from "../lib/format";
@@ -38,6 +40,7 @@ export function EventDetail({
   onDeleted,
 }: EventDetailProps) {
   const [editing, setEditing] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -223,28 +226,40 @@ export function EventDetail({
               Detalle
             </p>
           </div>
-          {isOwner && (
-            <div className="flex items-center gap-2">
-              {!editing && (
-                <button
-                  onClick={() => setEditing(true)}
-                  className="px-3 py-1.5 rounded-md text-xs font-[family-name:var(--font-display)] uppercase tracking-wide cursor-pointer"
-                  style={{ background: "#80C6FF", color: "#0e0f11" }}
-                >
-                  Editar
-                </button>
-              )}
+          <div className="flex items-center gap-2">
+            {!editing && (
               <button
-                onClick={handleDelete}
-                disabled={deleting}
+                onClick={() => setSharing(true)}
                 className="p-2 rounded-full cursor-pointer"
-                style={{ background: "#1D1F23", border: "1px solid #34383D" }}
-                aria-label="Eliminar"
+                style={{ background: "#1D1F23", border: `1px solid ${accent}` }}
+                aria-label="Compartir cartel"
               >
-                <Trash2 size={16} color="#ff6b6b" />
+                <Share2 size={16} color={accent} />
               </button>
-            </div>
-          )}
+            )}
+            {isOwner && (
+              <>
+                {!editing && (
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="px-3 py-1.5 rounded-md text-xs font-[family-name:var(--font-display)] uppercase tracking-wide cursor-pointer"
+                    style={{ background: "#80C6FF", color: "#0e0f11" }}
+                  >
+                    Editar
+                  </button>
+                )}
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="p-2 rounded-full cursor-pointer"
+                  style={{ background: "#1D1F23", border: "1px solid #34383D" }}
+                  aria-label="Eliminar"
+                >
+                  <Trash2 size={16} color="#ff6b6b" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Image */}
@@ -584,6 +599,13 @@ export function EventDetail({
           </div>
         )}
       </div>
+
+      {sharing && (
+        <SharePoster
+          event={{ ...event, attendees: localAttendees }}
+          onClose={() => setSharing(false)}
+        />
+      )}
     </div>
   );
 }
