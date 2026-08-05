@@ -14,9 +14,10 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { uploadEventImage } from "../lib/upload";
+import { formatLongDate, formatTime12 } from "../lib/format";
 import { MapPicker } from "./MapPicker";
 import { TipoBadge } from "./EventCard";
-import type { EventWithAttendees } from "../types";
+import type { EventWithAttendees, Event } from "../types";
 import type { User } from "@supabase/supabase-js";
 
 const DIFICULTADES = ["Facil", "Moderada", "Dificil"] as const;
@@ -25,7 +26,7 @@ interface EventDetailProps {
   event: EventWithAttendees;
   user: User;
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (event: Event) => void;
   onDeleted: () => void;
 }
 
@@ -58,6 +59,11 @@ export function EventDetail({
 
   const accent = event.type === "equipo" ? "#80C6FF" : "#F3443F";
 
+  // Solo quien creo el evento puede editarlo o borrarlo: las policies RLS lo
+  // impiden para los demas, pero PostgREST no devuelve error cuando la
+  // operacion afecta 0 filas, asi que sin esto fallaria en silencio.
+  const isOwner = event.created_by != null && event.created_by === user.id;
+
   const isAttending = localAttendees.some((a) => a.user_id === user.id);
 
   async function toggleAttend() {
@@ -84,27 +90,6 @@ export function EventDetail({
         { event_id: event.id, user_id: user.id, display_name: name, avatar_url: null },
       ]);
     }
-  }
-
-  function formatLongDate(dateStr: string) {
-    const parts = dateStr.split("-").map(Number);
-    const y = parts[0] ?? 0;
-    const m = parts[1] ?? 1;
-    const d = parts[2] ?? 1;
-    return new Date(y, m - 1, d).toLocaleDateString("es-MX", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  }
-
-  function formatTime12(time: string) {
-    const [h, m] = time.split(":").map(Number);
-    if (h == null || m == null) return time;
-    const period = h >= 12 ? "p.m." : "a.m.";
-    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    return `${h12}:${String(m).padStart(2, "0")} ${period}`;
   }
 
   function handleImage(e: React.ChangeEvent<HTMLInputElement>) {
@@ -134,10 +119,11 @@ export function EventDetail({
       difficulty: type === "equipo" ? difficulty : null,
     };
 
-    const { error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from("eventos")
       .update(updates)
-      .eq("id", event.id);
+      .eq("id", event.id)
+      .select("*");
 
     if (updateError) {
       setError(updateError.message);
@@ -145,29 +131,73 @@ export function EventDetail({
       return;
     }
 
+    // 0 filas = RLS rechazo el update sin marcar error.
+    if (!updated || updated.length === 0 || !updated[0]) {
+      setError("No se guardaron los cambios: solo quien creo el evento puede editarlo.");
+      setSaving(false);
+      return;
+    }
+
+    let saved = updated[0] as Event;
+
     if (imageFile) {
-      const url = await uploadEventImage(imageFile, event.id);
-      if (url) {
-        await supabase
-          .from("eventos")
-          .update({ image_url: url })
-          .eq("id", event.id);
+      const result = await uploadEventImage(imageFile, event.id);
+      if ("error" in result) {
+        // Los demas cambios ya se guardaron; solo fallo la imagen.
+        setError(`${result.error} El resto de los cambios si se guardaron.`);
+        setSaving(false);
+        onSaved(saved);
+        return;
       }
+      await supabase
+        .from("eventos")
+        .update({ image_url: result.url })
+        .eq("id", event.id);
+      saved = { ...saved, image_url: result.url };
     }
 
     setSaving(false);
     setEditing(false);
-    onSaved();
+    onSaved(saved);
   }
 
   async function handleDelete() {
     if (!confirm("Eliminar este evento?")) return;
     setDeleting(true);
-    await supabase.from("eventos").delete().eq("id", event.id);
+    setError(null);
+
+    const { data: removed, error: deleteError } = await supabase
+      .from("eventos")
+      .delete()
+      .eq("id", event.id)
+      .select("id");
+
     setDeleting(false);
+
+    if (deleteError) {
+      setError(deleteError.message);
+      return;
+    }
+
+    // 0 filas = RLS rechazo el delete. Sin esta guarda el evento desaparecia de
+    // la lista local pero seguia en la base y volvia al recargar.
+    if (!removed || removed.length === 0) {
+      setError("No se pudo eliminar: solo quien creo el evento puede borrarlo.");
+      return;
+    }
+
     onDeleted();
     onClose();
   }
+
+  const errorBanner = error ? (
+    <p
+      className="text-xs px-3 py-2 rounded-lg"
+      style={{ background: "#2a1a1a", color: "#ff6b6b" }}
+    >
+      {error}
+    </p>
+  ) : null;
 
   return (
     <div
@@ -193,26 +223,28 @@ export function EventDetail({
               Detalle
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            {!editing && (
+          {isOwner && (
+            <div className="flex items-center gap-2">
+              {!editing && (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="px-3 py-1.5 rounded-md text-xs font-[family-name:var(--font-display)] uppercase tracking-wide cursor-pointer"
+                  style={{ background: "#80C6FF", color: "#0e0f11" }}
+                >
+                  Editar
+                </button>
+              )}
               <button
-                onClick={() => setEditing(true)}
-                className="px-3 py-1.5 rounded-md text-xs font-[family-name:var(--font-display)] uppercase tracking-wide cursor-pointer"
-                style={{ background: "#80C6FF", color: "#0e0f11" }}
+                onClick={handleDelete}
+                disabled={deleting}
+                className="p-2 rounded-full cursor-pointer"
+                style={{ background: "#1D1F23", border: "1px solid #34383D" }}
+                aria-label="Eliminar"
               >
-                Editar
+                <Trash2 size={16} color="#ff6b6b" />
               </button>
-            )}
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="p-2 rounded-full cursor-pointer"
-              style={{ background: "#1D1F23", border: "1px solid #34383D" }}
-              aria-label="Eliminar"
-            >
-              <Trash2 size={16} color="#ff6b6b" />
-            </button>
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Image */}
@@ -387,11 +419,7 @@ export function EventDetail({
               </>
             )}
 
-            {error && (
-              <p className="text-xs px-3 py-2 rounded-lg" style={{ background: "#2a1a1a", color: "#ff6b6b" }}>
-                {error}
-              </p>
-            )}
+            {errorBanner}
 
             <div className="flex gap-2">
               <button
@@ -417,6 +445,8 @@ export function EventDetail({
         ) : (
           /* View mode */
           <div className="flex flex-col gap-4">
+            {errorBanner}
+
             <div className="flex items-center gap-2">
               <TipoBadge type={event.type} />
             </div>

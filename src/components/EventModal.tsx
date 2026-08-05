@@ -4,7 +4,7 @@ import { MapPicker } from "./MapPicker";
 import { Sticker, TipoBadge } from "./EventCard";
 import { supabase } from "../lib/supabase";
 import { uploadEventImage } from "../lib/upload";
-import type { EventWithAttendees, EventType } from "../types";
+import type { EventWithAttendees, EventType, Event } from "../types";
 
 const DIFICULTADES = ["Facil", "Moderada", "Dificil"] as const;
 
@@ -12,7 +12,7 @@ interface EventModalProps {
   dateKey: string;
   existingEvents: EventWithAttendees[];
   onClose: () => void;
-  onSaved: () => void;
+  onSaved: (event: Event) => void;
 }
 
 interface FormState {
@@ -28,7 +28,6 @@ interface FormState {
   distance: string;
   elevation: string;
   difficulty: string;
-  attendees: string[];
 }
 
 const EMPTY_FORM: FormState = {
@@ -44,7 +43,6 @@ const EMPTY_FORM: FormState = {
   distance: "",
   elevation: "",
   difficulty: "Facil",
-  attendees: [],
 };
 
 export function EventModal({
@@ -120,7 +118,7 @@ export function EventModal({
     const { data: inserted, error } = await supabase
       .from("eventos")
       .insert(newEvent)
-      .select("id")
+      .select("*")
       .single();
 
     if (error || !inserted) {
@@ -130,27 +128,27 @@ export function EventModal({
       return;
     }
 
-    if (form.imageFile) {
-      const url = await uploadEventImage(form.imageFile, inserted.id);
-      if (url) {
-        await supabase
-          .from("eventos")
-          .update({ image_url: url })
-          .eq("id", inserted.id);
-      }
-    }
+    let saved = inserted as Event;
 
-    if (form.type === "equipo" && form.attendees.length > 0) {
-      const rows = form.attendees.map((name) => ({
-        event_id: inserted.id,
-        user_id: userId,
-        display_name: name,
-      }));
-      await supabase.from("event_attendees").insert(rows);
+    if (form.imageFile) {
+      const result = await uploadEventImage(form.imageFile, saved.id);
+      if ("error" in result) {
+        // El evento ya se guardo; solo fallo la imagen. Se avisa y se deja al
+        // usuario decidir en vez de cerrar el modal como si todo hubiera salido.
+        setSaveError(`${result.error} El evento se guardo sin imagen.`);
+        setSaving(false);
+        onSaved(saved);
+        return;
+      }
+      await supabase
+        .from("eventos")
+        .update({ image_url: result.url })
+        .eq("id", saved.id);
+      saved = { ...saved, image_url: result.url };
     }
 
     setSaving(false);
-    onSaved();
+    onSaved(saved);
     onClose();
   }
 

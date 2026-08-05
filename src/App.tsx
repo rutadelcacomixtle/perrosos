@@ -1,7 +1,8 @@
-import { useEffect, useState, useMemo, useRef } from "react";
-import { Clock, MapPin, Users, TrendingUp, Gauge, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { Clock, MapPin, Users, TrendingUp, Gauge, ChevronDown, ChevronUp, Check, RefreshCw } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./lib/supabase";
+import { todayKey, formatLongDate, formatTime12 } from "./lib/format";
 import { AuthScreen } from "./components/AuthScreen";
 import { Header, ElevationDivider } from "./components/Header";
 import { Calendar } from "./components/Calendar";
@@ -13,27 +14,6 @@ import type { EventWithAttendees, Event } from "./types";
 
 const INITIAL_VISIBLE = 3;
 
-function formatCardDate(dateStr: string) {
-  const parts = dateStr.split("-").map(Number);
-  const y = parts[0] ?? 0;
-  const m = parts[1] ?? 1;
-  const d = parts[2] ?? 1;
-  return new Date(y, m - 1, d).toLocaleDateString("es-MX", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function formatTime12(time: string) {
-  const [h, m] = time.split(":").map(Number);
-  if (h == null || m == null) return time;
-  const period = h >= 12 ? "p.m." : "a.m.";
-  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
-}
-
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [events, setEvents] = useState<EventWithAttendees[]>([]);
@@ -41,6 +21,8 @@ export default function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [showAllUpcoming, setShowAllUpcoming] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<EventWithAttendees | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showExitToast, setShowExitToast] = useState(false);
   const backSwipeCountRef = useRef(0);
   const backSwipeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -70,7 +52,12 @@ export default function App() {
           if (backSwipeTimerRef.current) clearTimeout(backSwipeTimerRef.current);
           backSwipeCountRef.current = 0;
           setShowExitToast(false);
+          // window.close() solo funciona si la ventana la abrio un script o en
+          // PWA standalone; en una pestana normal no hace nada. Como esta vez no
+          // reponemos el sentinel, history.back() sale de la app hacia la pagina
+          // anterior, que es lo que el usuario espera del gesto.
           window.close();
+          history.back();
           return;
         }
         history.pushState({ screen: "home" }, "");
@@ -102,41 +89,70 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    async function fetchEvents() {
-      const { data: eventos } = await supabase
-        .from("eventos")
-        .select("*")
-        .order("date", { ascending: true });
+  const fetchEvents = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
 
-      if (!eventos) return;
+    const { data: eventos, error: eventosError } = await supabase
+      .from("eventos")
+      .select("*")
+      .order("date", { ascending: true });
 
-      const eventIds = eventos.map((e) => e.id);
-
-      const { data: attendeesRows } = await supabase
-        .from("event_attendees")
-        .select("event_id, user_id, display_name, avatar_url")
-        .in("event_id", eventIds);
-
-      const attendeesByEvent: Record<string, typeof attendeesRows> = {};
-      for (const row of attendeesRows ?? []) {
-        (attendeesByEvent[row.event_id] ??= []).push(row);
-      }
-
-      const merged: EventWithAttendees[] = eventos.map((e) => ({
-        ...e,
-        attendees: (attendeesByEvent[e.id] ?? []).map((a) => ({
-          event_id: a.event_id,
-          user_id: a.user_id,
-          display_name: a.display_name,
-          avatar_url: a.avatar_url,
-        })),
-      }));
-
-      setEvents(merged);
+    if (eventosError || !eventos) {
+      setLoadError(
+        eventosError?.message ?? "No se pudieron cargar los eventos."
+      );
+      setLoading(false);
+      return;
     }
 
+    const eventIds = eventos.map((e) => e.id);
+
+    const { data: attendeesRows, error: attendeesError } = await supabase
+      .from("event_attendees")
+      .select("event_id, user_id, display_name, avatar_url")
+      .in("event_id", eventIds);
+
+    if (attendeesError) {
+      setLoadError(attendeesError.message);
+      setLoading(false);
+      return;
+    }
+
+    const attendeesByEvent: Record<string, typeof attendeesRows> = {};
+    for (const row of attendeesRows ?? []) {
+      (attendeesByEvent[row.event_id] ??= []).push(row);
+    }
+
+    const merged: EventWithAttendees[] = eventos.map((e) => ({
+      ...e,
+      attendees: (attendeesByEvent[e.id] ?? []).map((a) => ({
+        event_id: a.event_id,
+        user_id: a.user_id,
+        display_name: a.display_name,
+        avatar_url: a.avatar_url,
+      })),
+    }));
+
+    setEvents(merged);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
     fetchEvents();
+  }, [fetchEvents]);
+
+  // Alta y edicion aplican el cambio de inmediato en vez de esperar el evento de
+  // realtime; si el canal se cae, el usuario igual ve lo que acaba de guardar.
+  // El id se deduplica porque realtime tambien va a mandar la misma fila.
+  const upsertEvent = useCallback((incoming: Event) => {
+    setEvents((prev) => {
+      const existing = prev.find((e) => e.id === incoming.id);
+      const next = existing
+        ? prev.map((e) => (e.id === incoming.id ? { ...e, ...incoming } : e))
+        : [...prev, { ...incoming, attendees: [] }];
+      return next.sort((a, b) => a.date.localeCompare(b.date));
+    });
   }, []);
 
   useEffect(() => {
@@ -145,17 +161,9 @@ export default function App() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "eventos" },
-        async (payload) => {
+        (payload) => {
           if (payload.eventType === "INSERT") {
-            const newEvent: EventWithAttendees = {
-              ...payload.new as Event,
-              attendees: [],
-            };
-            setEvents((prev) =>
-              [...prev, newEvent].sort((a, b) =>
-                a.date.localeCompare(b.date)
-              )
-            );
+            upsertEvent(payload.new as Event);
           } else if (payload.eventType === "UPDATE") {
             setEvents((prev) =>
               prev.map((ev) =>
@@ -206,10 +214,10 @@ export default function App() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [upsertEvent]);
 
   const upcoming = useMemo(() => {
-    const now = new Date().toISOString().slice(0, 10);
+    const now = todayKey();
     return events.filter((e) => e.date >= now);
   }, [events]);
 
@@ -297,7 +305,8 @@ export default function App() {
           event={selectedEvent}
           user={user}
           onClose={() => setSelectedEvent(null)}
-          onSaved={() => {
+          onSaved={(updated) => {
+            upsertEvent(updated);
             setSelectedEvent(null);
           }}
           onDeleted={() => {
@@ -326,7 +335,31 @@ export default function App() {
           >
             Proximas rodadas
           </h2>
-          {upcoming.length === 0 && (
+          {loading && (
+            <p className="text-sm" style={{ color: "#6B747C" }}>
+              Cargando eventos...
+            </p>
+          )}
+
+          {loadError && !loading && (
+            <div
+              className="rounded-lg px-3 py-2.5 flex items-center justify-between gap-3"
+              style={{ background: "#2a1a1a" }}
+            >
+              <p className="text-xs" style={{ color: "#ff6b6b" }}>
+                No se pudieron cargar los eventos. {loadError}
+              </p>
+              <button
+                onClick={fetchEvents}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs shrink-0 cursor-pointer font-[family-name:var(--font-display)] uppercase tracking-wide"
+                style={{ background: "#1D1F23", border: "1px solid #34383D", color: "#EDEFF2" }}
+              >
+                <RefreshCw size={11} /> Reintentar
+              </button>
+            </div>
+          )}
+
+          {!loading && !loadError && upcoming.length === 0 && (
             <p className="text-sm" style={{ color: "#6B747C" }}>
               Sin eventos por venir. Toca un dia del calendario para agregar uno.
             </p>
@@ -342,7 +375,7 @@ export default function App() {
                     className="font-[family-name:var(--font-display)] uppercase text-xs tracking-wide whitespace-nowrap"
                     style={{ color: "#EDEFF2" }}
                   >
-                    {formatCardDate(group.date)}
+                    {formatLongDate(group.date)}
                   </span>
                   <div className="h-px flex-1" style={{ background: "#34383D" }} />
                 </div>
@@ -475,9 +508,7 @@ export default function App() {
           dateKey={modalDate}
           existingEvents={dayEventsForModal}
           onClose={() => setModalDate(null)}
-          onSaved={() => {
-            /* re-fetch or optimistic update already handled */
-          }}
+          onSaved={upsertEvent}
         />
       )}
 
