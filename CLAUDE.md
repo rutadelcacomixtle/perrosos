@@ -8,8 +8,9 @@ tipos de evento conviven en el mismo calendario:
 - **Comunidad**: alguien comparte una imagen de un evento externo (carrera, rodada
   de otro grupo, etc.). Campos mínimos: título, imagen, lugar, hora, enlace al post
   original.
-- **Equipo**: rodadas que organiza el propio equipo. Además de lo anterior, llevan
-  distancia (km), desnivel (m) y dificultad (Facil/Moderada/Dificil).
+- **Equipo**: rodadas que organiza el propio equipo. Llevan título, lugar, hora,
+  imagen opcional, y además distancia (km), desnivel (m) y dificultad
+  (Facil/Moderada/Dificil). No llevan enlace al post original.
 
 Los dos tipos se distinguen por color en toda la interfaz (acento **rojo** =
 comunidad, acento **azul** = equipo) en vez de estar separados en pestañas.
@@ -135,8 +136,10 @@ Sobre acento rojo el texto va **blanco** (`#EDEFF2`); sobre acento azul va **osc
 - Nombre de la app: **PerroSOS MTB** (esa capitalización exacta, no todo mayúsculas).
 - Punto de reunión: autocompletado de texto **y** mapa con pin (no solo uno).
 - Horas en formato 12 h con "a.m." / "p.m.".
-- Las rodadas de equipo sin imagen muestran el logo del equipo dentro de un pentágono.
-- Los eventos de equipo no llevan imagen ni enlace en el formulario; los de comunidad sí.
+- Las rodadas de equipo **pueden** llevar imagen, y es opcional: sin ella el sticker
+  muestra el logo del equipo dentro de un pentágono. (El formulario de equipo no tuvo
+  imagen entre `dd6c9e1` y este cambio; se reactivó a propósito.)
+- El enlace al post original sigue siendo solo de comunidad.
 - La asistencia va ligada a la cuenta del usuario, no a texto libre.
 
 ## Problemas conocidos pendientes
@@ -155,7 +158,7 @@ que sigue.
    inline a clases de Tailwind o si se quitan del CSS. Mientras tanto, no mezclar.
 5. **`event_attendees.display_name` está desnormalizado** y no se actualiza si el
    usuario cambia su nombre en `profiles`.
-6. Al cambiar un evento de comunidad a equipo en la edición no se limpia `image_url`.
+6. **No se puede quitar una imagen ya subida**, solo reemplazarla por otra.
 
 ## Pendientes de producto
 1. **Hosting** para que el enlace sea estable y compartible en WhatsApp (Vercel o

@@ -394,30 +394,33 @@ export function EventDetail({
               </div>
             )}
 
-            {type === "comunidad" && (
-              <>
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  style={{
-                    background: "#1D1F23",
-                    border: "1px dashed #454B52",
-                  }}
-                  className="rounded-md px-3 py-3 text-sm flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <ImageIcon size={16} color="#9BA3AC" />
-                  <span style={{ color: "#9BA3AC" }}>
-                    {imageUrl ? "Cambiar imagen" : "Subir imagen"}
-                  </span>
-                </button>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImage}
-                  className="hidden"
-                />
-              </>
-            )}
+            <div>
+              <button
+                onClick={() => fileRef.current?.click()}
+                style={{
+                  background: "#1D1F23",
+                  border: "1px dashed #454B52",
+                }}
+                className="rounded-md px-3 py-3 text-sm flex items-center justify-center gap-2 cursor-pointer w-full"
+              >
+                <ImageIcon size={16} color="#9BA3AC" />
+                <span style={{ color: "#9BA3AC" }}>
+                  {imageUrl ? "Cambiar imagen" : "Subir imagen"}
+                </span>
+              </button>
+              {type === "equipo" && !imageUrl && (
+                <p className="text-xs mt-1.5" style={{ color: "#6B747C" }}>
+                  Opcional. Sin imagen se usa el logo del equipo.
+                </p>
+              )}
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImage}
+              className="hidden"
+            />
 
             {errorBanner}
 

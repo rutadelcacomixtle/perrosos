@@ -357,42 +357,46 @@ export function EventModal({
           )}
 
           {form.type === "comunidad" && (
-            <>
-              <input
-                value={form.sourceUrl}
-                onChange={(ev) => updateForm("sourceUrl", ev.target.value)}
-                placeholder="Enlace al post original (FB, IG, TT...)"
-                style={{
-                  background: "#0e0f11",
-                  border: "1px solid #34383D",
-                  color: "#EDEFF2",
-                }}
-                className="rounded-md px-3 py-2 text-sm outline-none"
-              />
-              <button
-                onClick={() => fileRef.current?.click()}
-                style={{
-                  background: "#1D1F23",
-                  border: "1px dashed #454B52",
-                }}
-                className="rounded-md px-3 py-3 text-sm flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <ImageIcon size={16} color="#9BA3AC" />
-                <span style={{ color: "#9BA3AC" }}>
-                  {form.imageUrl
-                    ? "Imagen lista"
-                    : "Subir imagen del evento"}
-                </span>
-              </button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImage}
-                className="hidden"
-              />
-            </>
+            <input
+              value={form.sourceUrl}
+              onChange={(ev) => updateForm("sourceUrl", ev.target.value)}
+              placeholder="Enlace al post original (FB, IG, TT...)"
+              style={{
+                background: "#0e0f11",
+                border: "1px solid #34383D",
+                color: "#EDEFF2",
+              }}
+              className="rounded-md px-3 py-2 text-sm outline-none"
+            />
           )}
+
+          <div>
+            <button
+              onClick={() => fileRef.current?.click()}
+              style={{
+                background: "#1D1F23",
+                border: "1px dashed #454B52",
+              }}
+              className="rounded-md px-3 py-3 text-sm flex items-center justify-center gap-2 cursor-pointer w-full"
+            >
+              <ImageIcon size={16} color="#9BA3AC" />
+              <span style={{ color: "#9BA3AC" }}>
+                {form.imageUrl ? "Imagen lista" : "Subir imagen del evento"}
+              </span>
+            </button>
+            {form.type === "equipo" && !form.imageUrl && (
+              <p className="text-xs mt-1.5" style={{ color: "#6B747C" }}>
+                Opcional. Sin imagen se usa el logo del equipo.
+              </p>
+            )}
+          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImage}
+            className="hidden"
+          />
 
           {saveError && (
             <p
